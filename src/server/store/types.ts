@@ -138,16 +138,30 @@ export interface Store {
   getJackpot(): Promise<JackpotRecord>;
   putJackpot(jackpot: JackpotRecord): Promise<void>;
   createRound(round: RoundRecord): Promise<void>;
-  listRounds(userId: string, opts?: { limit?: number; offset?: number; kind?: string; result?: "win" | "loss" }): Promise<RoundRecord[]>;
+  listRounds(
+    userId: string,
+    opts?: {
+      limit?: number;
+      offset?: number;
+      kind?: string;
+      result?: "win" | "loss";
+    },
+  ): Promise<RoundRecord[]>;
   countRounds(userId: string): Promise<number>;
   listAllRounds(opts?: { limit?: number }): Promise<RoundRecord[]>;
   listAllUsers(): Promise<UserRecord[]>;
 
-  getIdempotency(key: string, userId: string): Promise<IdempotencyRecord | undefined>;
+  getIdempotency(
+    key: string,
+    userId: string,
+  ): Promise<IdempotencyRecord | undefined>;
   putIdempotency(record: IdempotencyRecord): Promise<void>;
 
   createBonusGame(game: BonusGameRecord): Promise<void>;
   getBonusGame(id: string): Promise<BonusGameRecord | undefined>;
-  getActiveBonusGame(userId: string, gameId: string): Promise<BonusGameRecord | undefined>;
+  getActiveBonusGame(
+    userId: string,
+    gameId: string,
+  ): Promise<BonusGameRecord | undefined>;
   updateBonusGame(id: string, patch: Partial<BonusGameRecord>): Promise<void>;
 }

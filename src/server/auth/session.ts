@@ -16,12 +16,16 @@ function secretKey(): Uint8Array {
       throw new Error("AUTH_SECRET must be set in production");
     }
     // Dev-only fallback so the app boots without extra setup.
-    return new TextEncoder().encode("catsino-dev-secret-change-me-please-1234567890");
+    return new TextEncoder().encode(
+      "catsino-dev-secret-change-me-please-1234567890",
+    );
   }
   return new TextEncoder().encode(secret);
 }
 
-export async function createSessionToken(payload: SessionPayload): Promise<string> {
+export async function createSessionToken(
+  payload: SessionPayload,
+): Promise<string> {
   return new SignJWT({ email: payload.email, role: payload.role })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
@@ -30,7 +34,9 @@ export async function createSessionToken(payload: SessionPayload): Promise<strin
     .sign(secretKey());
 }
 
-export async function verifySessionToken(token: string): Promise<SessionPayload | null> {
+export async function verifySessionToken(
+  token: string,
+): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, secretKey());
     if (!payload.sub || typeof payload.email !== "string") return null;

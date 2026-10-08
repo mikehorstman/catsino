@@ -30,8 +30,20 @@ export function RegisterForm() {
 
   return (
     <form action={onSubmit} className="space-y-4">
-      <Field label="Display name" name="displayName" type="text" placeholder="Whiskers" required />
-      <Field label="Email" name="email" type="email" placeholder="cat@example.com" required />
+      <Field
+        label="Display name"
+        name="displayName"
+        type="text"
+        placeholder="Whiskers"
+        required
+      />
+      <Field
+        label="Email"
+        name="email"
+        type="email"
+        placeholder="cat@example.com"
+        required
+      />
       <Field
         label="Password"
         name="password"
@@ -40,7 +52,11 @@ export function RegisterForm() {
         required
         minLength={8}
       />
-      {error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p>}
+      {error && (
+        <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300">
+          {error}
+        </p>
+      )}
       <Button type="submit" size="lg" className="w-full" disabled={pending}>
         {pending ? "Creating your account…" : "Claim 10,000 welcome coins"}
       </Button>
@@ -54,11 +70,18 @@ export function RegisterForm() {
   );
 }
 
-function Field(props: React.InputHTMLAttributes<HTMLInputElement> & { label: string; name: string }) {
+function Field(
+  props: React.InputHTMLAttributes<HTMLInputElement> & {
+    label: string;
+    name: string;
+  },
+) {
   const { label, ...rest } = props;
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-text-secondary">{label}</span>
+      <span className="mb-1.5 block text-sm font-medium text-text-secondary">
+        {label}
+      </span>
       <input
         {...rest}
         className="w-full rounded-xl border border-ink-600 bg-ink-800/70 px-4 py-3 text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-gold-500/60 focus:ring-2 focus:ring-gold-500/20"

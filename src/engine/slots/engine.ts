@@ -42,7 +42,11 @@ function matchLine(
   config: SlotConfig,
   grid: string[][],
   payline: number[],
-): { symbolId: string; count: number; positions: { col: number; row: number }[] } {
+): {
+  symbolId: string;
+  count: number;
+  positions: { col: number; row: number }[];
+} {
   let base = "";
   let count = 0;
   const positions: { col: number; row: number }[] = [];
@@ -75,7 +79,10 @@ function matchLine(
   return { symbolId: base, count, positions };
 }
 
-function paytableFor(config: SlotConfig, symbolId: string): Record<number, number> {
+function paytableFor(
+  config: SlotConfig,
+  symbolId: string,
+): Record<number, number> {
   return config.paytable[symbolId] ?? {};
 }
 
@@ -155,7 +162,12 @@ export function spinSlot(
   }
 
   const grid = buildGrid(config, stops);
-  const { lineWins, scatterCount, scatterWin } = evaluateSpin(config, grid, lineBet, multiplier);
+  const { lineWins, scatterCount, scatterWin } = evaluateSpin(
+    config,
+    grid,
+    lineBet,
+    multiplier,
+  );
 
   const freeSpinsFeature = config.features.find((f) => f.type === "freeSpins");
   const pickFeature = config.features.find((f) => f.type === "pickBonus");
@@ -164,7 +176,11 @@ export function spinSlot(
   let freeSpinsAwarded = 0;
   let triggeredFreeSpins = false;
   if (freeSpinsFeature && freeSpinsFeature.type === "freeSpins") {
-    const triggerCount = countSymbol(config, grid, freeSpinsFeature.triggerSymbol);
+    const triggerCount = countSymbol(
+      config,
+      grid,
+      freeSpinsFeature.triggerSymbol,
+    );
     if (triggerCount >= freeSpinsFeature.triggerCount) {
       freeSpinsAwarded = freeSpinsFeature.spins;
       triggeredFreeSpins = true;
@@ -190,7 +206,11 @@ export function spinSlot(
   let nextMultiplier = multiplier;
   if (isFreeSpin && triggeredFreeSpins) {
     nextMultiplier = multiplier + RETRIGGER_MULTIPLIER_STEP;
-  } else if (!isFreeSpin && newRemaining > 0 && freeSpinsFeature?.type === "freeSpins") {
+  } else if (
+    !isFreeSpin &&
+    newRemaining > 0 &&
+    freeSpinsFeature?.type === "freeSpins"
+  ) {
     nextMultiplier = freeSpinsFeature.multiplier;
   }
 
@@ -214,7 +234,11 @@ export function spinSlot(
 }
 
 /** Count occurrences of a symbol anywhere on the grid. */
-function countSymbol(config: SlotConfig, grid: string[][], symbolId: string): number {
+function countSymbol(
+  config: SlotConfig,
+  grid: string[][],
+  symbolId: string,
+): number {
   let count = 0;
   for (let row = 0; row < config.rows; row += 1) {
     for (let col = 0; col < config.cols; col += 1) {

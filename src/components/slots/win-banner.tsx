@@ -46,7 +46,10 @@ export function WinBanner({ win, bet }: { win: WinLike | null; bet: number }) {
 
   if (!win || win.totalWin <= 0) {
     return (
-      <div className="h-[68px] rounded-2xl border border-ink-700 bg-ink-800/40" aria-hidden />
+      <div
+        className="h-[68px] rounded-2xl border border-ink-700 bg-ink-800/40"
+        aria-hidden
+      />
     );
   }
 
@@ -57,7 +60,9 @@ export function WinBanner({ win, bet }: { win: WinLike | null; bet: number }) {
   return (
     <div
       className={`flex min-h-[68px] items-center justify-between rounded-2xl border px-5 py-3 ${
-        isBig ? "border-gold-400/60 bg-gold-500/15 glow-gold" : "border-win/40 bg-win/10"
+        isBig
+          ? "border-gold-400/60 bg-gold-500/15 glow-gold"
+          : "border-win/40 bg-win/10"
       }`}
       role="status"
       aria-live="polite"
@@ -66,14 +71,18 @@ export function WinBanner({ win, bet }: { win: WinLike | null; bet: number }) {
         <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
           {isBig ? "Big Win!" : "You won"}
         </p>
-        <p className={`font-display text-2xl font-black ${isBig ? "gold-text" : "text-win"}`}>
+        <p
+          className={`font-display text-2xl font-black ${isBig ? "gold-text" : "text-win"}`}
+        >
           +{formatCoins(shown)}
         </p>
       </div>
       <div className="text-right text-sm text-text-muted">
         {lineCount > 0 && <p>{lineCount} winning line(s)</p>}
         {freeSpins > 0 && (
-          <p className="font-semibold text-neon-purple">+{freeSpins} free spins!</p>
+          <p className="font-semibold text-neon-purple">
+            +{freeSpins} free spins!
+          </p>
         )}
       </div>
     </div>

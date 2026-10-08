@@ -29,7 +29,13 @@ interface SpinResponse {
     unlockedAchievements: { id: string; title: string; reward: number }[];
   };
   bonus:
-    | { type: "pickBonus"; id: string; picks: number; cellCount: number; bet: number }
+    | {
+        type: "pickBonus";
+        id: string;
+        picks: number;
+        cellCount: number;
+        bet: number;
+      }
     | { type: "freeSpins"; remaining: number; multiplier: number; bet: number }
     | null;
   jackpot: { amount: number; pool: number } | null;
@@ -61,10 +67,16 @@ export function SlotMachine({
   const [win, setWin] = useState<SpinResult | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [jackpotPool, setJackpotPool] = useState(initialJackpot);
-  const [celebration, setCelebration] = useState<{ win: number; bet: number } | null>(null);
-  const [freeSpins, setFreeSpins] = useState<
-    { remaining: number; multiplier: number; bet: number; accumulated: number } | null
-  >(initialState.freeSpins ?? null);
+  const [celebration, setCelebration] = useState<{
+    win: number;
+    bet: number;
+  } | null>(null);
+  const [freeSpins, setFreeSpins] = useState<{
+    remaining: number;
+    multiplier: number;
+    bet: number;
+    accumulated: number;
+  } | null>(initialState.freeSpins ?? null);
   const [pickBonus, setPickBonus] = useState<PickBonusView | null>(
     initialState.activeBonus
       ? {
@@ -113,7 +125,9 @@ export function SlotMachine({
       );
     }
     for (const achievement of data.progression?.unlockedAchievements ?? []) {
-      setMessage(`Achievement unlocked: ${achievement.title} (+${formatCoins(achievement.reward)})`);
+      setMessage(
+        `Achievement unlocked: ${achievement.title} (+${formatCoins(achievement.reward)})`,
+      );
     }
   }, []);
 
@@ -123,8 +137,10 @@ export function SlotMachine({
       setJackpotPool(data.jackpotPool);
       if (data.bonus?.type === "freeSpins") {
         setFreeSpins((prev) => ({
-          remaining: data.bonus!.type === "freeSpins" ? data.bonus!.remaining : 0,
-          multiplier: data.bonus!.type === "freeSpins" ? data.bonus!.multiplier : 1,
+          remaining:
+            data.bonus!.type === "freeSpins" ? data.bonus!.remaining : 0,
+          multiplier:
+            data.bonus!.type === "freeSpins" ? data.bonus!.multiplier : 1,
           bet: data.bonus!.bet,
           accumulated: prev?.accumulated ?? 0,
         }));
@@ -167,7 +183,11 @@ export function SlotMachine({
 
     const response = freeSpins
       ? await playFreeSpinAction({ gameId: config.id })
-      : await spinSlotAction({ gameId: config.id, bet, idempotencyKey: newKey() });
+      : await spinSlotAction({
+          gameId: config.id,
+          bet,
+          idempotencyKey: newKey(),
+        });
 
     if (!response.ok || !response.data) {
       setSpinning(false);
@@ -194,7 +214,11 @@ export function SlotMachine({
   // Track the running bonus win for the free-spins status bar.
   useEffect(() => {
     if (win && freeSpins) {
-      setFreeSpins((prev) => (prev ? { ...prev, accumulated: (prev.accumulated ?? 0) + win.totalWin } : prev));
+      setFreeSpins((prev) =>
+        prev
+          ? { ...prev, accumulated: (prev.accumulated ?? 0) + win.totalWin }
+          : prev,
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [win]);
@@ -212,7 +236,9 @@ export function SlotMachine({
       )}
 
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-black text-text-primary">{config.name}</h1>
+        <h1 className="font-display text-2xl font-black text-text-primary">
+          {config.name}
+        </h1>
         <Badge tone="gold">{config.paylines.length} lines</Badge>
       </div>
 
@@ -232,7 +258,9 @@ export function SlotMachine({
           state={pickBonus}
           onComplete={(bonusWin) => {
             setWin({ totalWin: bonusWin } as SpinResult);
-            setMessage(`Cat Burglar Bonus complete — you won ${formatCoins(bonusWin)} coins!`);
+            setMessage(
+              `Cat Burglar Bonus complete — you won ${formatCoins(bonusWin)} coins!`,
+            );
             setPickBonus(null);
           }}
         />
@@ -290,8 +318,12 @@ export function SlotMachine({
                 variant="ghost"
                 size="icon"
                 aria-label="Increase bet"
-                disabled={spinning || inFreeSpins || betIndex === levels.length - 1}
-                onClick={() => setBetIndex((i) => Math.min(levels.length - 1, i + 1))}
+                disabled={
+                  spinning || inFreeSpins || betIndex === levels.length - 1
+                }
+                onClick={() =>
+                  setBetIndex((i) => Math.min(levels.length - 1, i + 1))
+                }
               >
                 <Plus className="h-4 w-4" />
               </Button>

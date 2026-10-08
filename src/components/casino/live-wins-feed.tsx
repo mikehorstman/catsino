@@ -38,7 +38,9 @@ export function LiveWinsFeed({ rounds }: { rounds: RoundRecord[] }) {
           >
             <Flame className="h-4 w-4 text-gold-400" />
             <div>
-              <p className="text-xs text-text-muted">{gameTitle(round.gameId)}</p>
+              <p className="text-xs text-text-muted">
+                {gameTitle(round.gameId)}
+              </p>
               <p className="font-display text-sm font-bold text-win">
                 +{formatCoins(round.winTotal)}
               </p>

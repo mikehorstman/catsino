@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { Volume2, VolumeX, LogOut, User as UserIcon, Menu, X } from "lucide-react";
+import {
+  Volume2,
+  VolumeX,
+  LogOut,
+  User as UserIcon,
+  Menu,
+  X,
+} from "lucide-react";
 import { Logo } from "@/components/casino/logo";
 import { BalancePill } from "@/components/casino/balance-pill";
 import { JackpotTicker } from "@/components/casino/jackpot-ticker";
@@ -51,7 +58,10 @@ export function SiteHeader({
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
           {NAV.map((item) => {
-            const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+            const active =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}
@@ -79,7 +89,11 @@ export function SiteHeader({
             aria-label={muted ? "Unmute sounds" : "Mute sounds"}
             className="grid h-10 w-10 place-items-center rounded-lg text-text-secondary transition-colors hover:bg-ink-700/60 hover:text-text-primary"
           >
-            {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+            {muted ? (
+              <VolumeX className="h-5 w-5" />
+            ) : (
+              <Volume2 className="h-5 w-5" />
+            )}
           </button>
 
           {user ? (
@@ -103,7 +117,13 @@ export function SiteHeader({
                     <Link href="/register">Save progress</Link>
                   </Button>
                 ) : (
-                  <Button variant="ghost" size="icon" onClick={logout} aria-label="Log out" disabled={pending}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={logout}
+                    aria-label="Log out"
+                    disabled={pending}
+                  >
                     <LogOut className="h-4 w-4" />
                   </Button>
                 )}
@@ -126,13 +146,20 @@ export function SiteHeader({
             aria-label="Toggle menu"
             className="grid h-10 w-10 place-items-center rounded-lg text-text-secondary md:hidden"
           >
-            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {menuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
         </div>
       </div>
 
       {menuOpen && (
-        <nav className="border-t border-gold-500/10 bg-ink-900/95 px-4 pb-4 pt-2 md:hidden" aria-label="Mobile">
+        <nav
+          className="border-t border-gold-500/10 bg-ink-900/95 px-4 pb-4 pt-2 md:hidden"
+          aria-label="Mobile"
+        >
           {NAV.map((item) => (
             <Link
               key={item.href}
@@ -158,7 +185,12 @@ export function SiteHeader({
                     </Link>
                   </Button>
                 ) : (
-                  <Button variant="ghost" size="sm" onClick={logout} disabled={pending}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={logout}
+                    disabled={pending}
+                  >
                     <LogOut className="h-4 w-4" /> Log out
                   </Button>
                 )}

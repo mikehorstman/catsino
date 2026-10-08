@@ -18,7 +18,9 @@ export default async function HomePage() {
   const store = getStore();
   const liveGames = GAMES.filter((g) => g.status === "live");
   const slots = liveGames.filter((g) => g.kind === "slots");
-  const daily = new BonusService(store, new WalletService(store)).dailyStatus(user);
+  const daily = new BonusService(store, new WalletService(store)).dailyStatus(
+    user,
+  );
   const jackpotPool = (await store.getJackpot()).pool;
   const recentWins = await store.listAllRounds({ limit: 40 });
 
@@ -31,20 +33,24 @@ export default async function HomePage() {
           src="/art/brand/hero.jpg"
           alt=""
           className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-1/2 object-cover opacity-40 md:block"
-          style={{ maskImage: "linear-gradient(to left, black, transparent)", WebkitMaskImage: "linear-gradient(to left, black, transparent)" }}
+          style={{
+            maskImage: "linear-gradient(to left, black, transparent)",
+            WebkitMaskImage: "linear-gradient(to left, black, transparent)",
+          }}
         />
         <div className="relative max-w-2xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-gold-500/30 bg-gold-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-gold-200">
-            <Sparkles className="h-3.5 w-3.5" /> Free to play · Virtual coins only
+            <Sparkles className="h-3.5 w-3.5" /> Free to play · Virtual coins
+            only
           </span>
           <h1 className="mt-5 font-display text-4xl font-black leading-tight sm:text-6xl">
             <span className="gold-text">The Cat&apos;s</span>{" "}
             <span className="text-text-primary">Casino</span>
           </h1>
           <p className="mt-4 max-w-xl text-base text-text-secondary sm:text-lg">
-            Spin elegant cat-themed slots and take on European roulette. Earn Catsino
-            Coins, climb from Stray Kitten to Catsino VIP, and chase the big win —
-            all risk-free.
+            Spin elegant cat-themed slots and take on European roulette. Earn
+            Catsino Coins, climb from Stray Kitten to Catsino VIP, and chase the
+            big win — all risk-free.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button asChild size="lg">
@@ -56,7 +62,8 @@ export default async function HomePage() {
           </div>
           <div className="mt-8 flex flex-wrap gap-6 text-sm text-text-muted">
             <span className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-win" /> Server-authoritative outcomes
+              <ShieldCheck className="h-4 w-4 text-win" /> Server-authoritative
+              outcomes
             </span>
             <span className="flex items-center gap-2">
               <Coins className="h-4 w-4 text-gold-400" /> No real money, ever
@@ -95,7 +102,12 @@ export default async function HomePage() {
       </section>
 
       <section className="mt-12">
-        <SectionHeading title="Popular Games" subtitle="Everything on the Catsino floor." href="/games" action="Browse all" />
+        <SectionHeading
+          title="Popular Games"
+          subtitle="Everything on the Catsino floor."
+          href="/games"
+          action="Browse all"
+        />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {GAMES.map((game) => (
             <GameCard key={game.id} game={game} />

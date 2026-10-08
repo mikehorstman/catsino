@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { createSeededRng } from "@/engine/rng/seeded";
-import { generatePickBoard, resolvePick, settlePickBonus } from "@/engine/slots/bonus";
+import {
+  generatePickBoard,
+  resolvePick,
+  settlePickBonus,
+} from "@/engine/slots/bonus";
 import { spinSlot } from "@/engine/slots/engine";
 import type { PickBonusFeature, SlotConfig } from "@/engine/slots/types";
 import { CAT_MEOW } from "@/games/slots/cat-meow/config";
@@ -31,7 +35,9 @@ describe("pick bonus board", () => {
     const a = generatePickBoard(FEATURE, createSeededRng(42));
     const b = generatePickBoard(FEATURE, createSeededRng(42));
     expect(a.cells.map((c) => c.kind)).toEqual(b.cells.map((c) => c.kind));
-    expect(a.cells.map((c) => c.multiplier)).toEqual(b.cells.map((c) => c.multiplier));
+    expect(a.cells.map((c) => c.multiplier)).toEqual(
+      b.cells.map((c) => c.multiplier),
+    );
   });
 
   it("resolves a pick to the stored cell (no re-rolling)", () => {

@@ -63,7 +63,9 @@ function getApp(): App {
 const JSON_FIELDS = ["outcome", "board", "response"] as const;
 
 function encode<T extends object>(record: T): Record<string, unknown> {
-  const out: Record<string, unknown> = { ...(record as Record<string, unknown>) };
+  const out: Record<string, unknown> = {
+    ...(record as Record<string, unknown>),
+  };
   for (const field of JSON_FIELDS) {
     if (out[field] !== undefined && out[field] !== null) {
       out[field] = JSON.stringify(out[field]);
@@ -155,9 +157,16 @@ export class FirestoreStore implements Store {
   }
   async listRounds(
     userId: string,
-    opts: { limit?: number; offset?: number; kind?: string; result?: "win" | "loss" } = {},
+    opts: {
+      limit?: number;
+      offset?: number;
+      kind?: string;
+      result?: "win" | "loss";
+    } = {},
   ) {
-    const snap = await this.col(COLLECTIONS.rounds).where("userId", "==", userId).get();
+    const snap = await this.col(COLLECTIONS.rounds)
+      .where("userId", "==", userId)
+      .get();
     let rows = snap.docs.map((d) => decode<RoundRecord>(d.data()));
     if (opts.kind) rows = rows.filter((r) => r.kind === opts.kind);
     if (opts.result === "win") rows = rows.filter((r) => r.winTotal > 0);
@@ -168,7 +177,10 @@ export class FirestoreStore implements Store {
     return rows.slice(offset, offset + limit);
   }
   async countRounds(userId: string) {
-    const snap = await this.col(COLLECTIONS.rounds).where("userId", "==", userId).count().get();
+    const snap = await this.col(COLLECTIONS.rounds)
+      .where("userId", "==", userId)
+      .count()
+      .get();
     return snap.data().count;
   }
   async listAllRounds(opts: { limit?: number } = {}) {
@@ -188,11 +200,15 @@ export class FirestoreStore implements Store {
     return `${userId}:${key}`;
   }
   async getIdempotency(key: string, userId: string) {
-    const snap = await this.col(COLLECTIONS.idempotency).doc(this.idemId(key, userId)).get();
+    const snap = await this.col(COLLECTIONS.idempotency)
+      .doc(this.idemId(key, userId))
+      .get();
     return snap.exists ? decode<IdempotencyRecord>(snap.data()!) : undefined;
   }
   async putIdempotency(record: IdempotencyRecord) {
-    await this.col(COLLECTIONS.idempotency).doc(this.idemId(record.key, record.userId)).set(encode(record));
+    await this.col(COLLECTIONS.idempotency)
+      .doc(this.idemId(record.key, record.userId))
+      .set(encode(record));
   }
 
   // ---- Bonus games -------------------------------------------------------
@@ -210,10 +226,14 @@ export class FirestoreStore implements Store {
       .where("status", "==", "active")
       .limit(1)
       .get();
-    return snap.empty ? undefined : decode<BonusGameRecord>(snap.docs[0].data());
+    return snap.empty
+      ? undefined
+      : decode<BonusGameRecord>(snap.docs[0].data());
   }
   async updateBonusGame(id: string, patch: Partial<BonusGameRecord>) {
-    await this.col(COLLECTIONS.bonusGames).doc(id).set(encode(patch), { merge: true });
+    await this.col(COLLECTIONS.bonusGames)
+      .doc(id)
+      .set(encode(patch), { merge: true });
   }
 
   // ---- Jackpot -----------------------------------------------------------

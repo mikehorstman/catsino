@@ -19,7 +19,11 @@ export class AuthService {
     this.wallet = new WalletService(store);
   }
 
-  async register(input: { email: string; displayName: string; password: string }): Promise<UserRecord> {
+  async register(input: {
+    email: string;
+    displayName: string;
+    password: string;
+  }): Promise<UserRecord> {
     const email = input.email.trim().toLowerCase();
     if (await this.store.getUserByEmail(email)) {
       throw new AuthError("EMAIL_TAKEN", "That email is already registered");
@@ -108,16 +112,31 @@ export class AuthService {
 
   async login(email: string, password: string): Promise<UserRecord> {
     const user = await this.store.getUserByEmail(email);
-    if (!user) throw new AuthError("INVALID_CREDENTIALS", "Invalid email or password");
+    if (!user)
+      throw new AuthError("INVALID_CREDENTIALS", "Invalid email or password");
     const ok = await verifyPassword(user.passwordHash, password);
-    if (!ok) throw new AuthError("INVALID_CREDENTIALS", "Invalid email or password");
+    if (!ok)
+      throw new AuthError("INVALID_CREDENTIALS", "Invalid email or password");
     return user;
   }
 }
 
 const GUEST_NAMES = [
-  "Whiskers", "Mittens", "Shadow", "Luna", "Tiger", "Smokey", "Ginger",
-  "Oreo", "Pepper", "Mochi", "Nala", "Simba", "Cleo", "Felix", "Suki",
+  "Whiskers",
+  "Mittens",
+  "Shadow",
+  "Luna",
+  "Tiger",
+  "Smokey",
+  "Ginger",
+  "Oreo",
+  "Pepper",
+  "Mochi",
+  "Nala",
+  "Simba",
+  "Cleo",
+  "Felix",
+  "Suki",
 ];
 
 function randomGuestName(): string {

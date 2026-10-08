@@ -7,9 +7,9 @@ export function SiteFooter() {
             <span className="gold-text">CAT</span>SINO
           </p>
           <p className="max-w-2xl text-sm text-text-muted">
-            Catsino is a free-to-play demo casino. All coins are virtual and have
-            no cash value. There is no real-money gambling, deposit or withdrawal
-            anywhere on this site. Play for fun only.
+            Catsino is a free-to-play demo casino. All coins are virtual and
+            have no cash value. There is no real-money gambling, deposit or
+            withdrawal anywhere on this site. Play for fun only.
           </p>
           <p className="text-xs text-text-muted">
             © {new Date().getFullYear()} Catsino. A portfolio project.

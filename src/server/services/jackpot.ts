@@ -37,14 +37,21 @@ export class JackpotService {
   async contribute(bet: number): Promise<void> {
     if (bet <= 0) return;
     const jackpot = await this.store.getJackpot();
-    await this.store.putJackpot({ ...jackpot, pool: jackpot.pool + Math.floor(bet * JACKPOT_CONTRIBUTION) });
+    await this.store.putJackpot({
+      ...jackpot,
+      pool: jackpot.pool + Math.floor(bet * JACKPOT_CONTRIBUTION),
+    });
   }
 
   /**
    * Roll for the jackpot. Returns the win (and resets the pool) if it hits.
    * `bet` scales the odds so high rollers have a better chance.
    */
-  async roll(userId: string, userName: string, bet: number): Promise<JackpotWin | null> {
+  async roll(
+    userId: string,
+    userName: string,
+    bet: number,
+  ): Promise<JackpotWin | null> {
     const jackpot = await this.store.getJackpot();
     const betBonus = Math.min(JACKPOT_MAX_BET_BONUS, Math.max(1, bet / 100));
     const chance = JACKPOT_BASE_CHANCE * betBonus;

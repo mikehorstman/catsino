@@ -39,7 +39,11 @@ class AudioManager {
     (Object.keys(SOURCES) as SoundName[]).forEach((name) => {
       this.sounds.set(
         name,
-        new Howl({ src: [SOURCES[name]], volume: name === "spin" ? 0.4 : 0.6, preload: true }),
+        new Howl({
+          src: [SOURCES[name]],
+          volume: name === "spin" ? 0.4 : 0.6,
+          preload: true,
+        }),
       );
     });
   }

@@ -19,7 +19,15 @@ export function winTier(totalWin: number, bet: number): WinTier | null {
 
 const TIERS: Record<
   WinTier,
-  { label: string; sub: string; from: string; to: string; glow: string; icon: typeof Star; confetti: number }
+  {
+    label: string;
+    sub: string;
+    from: string;
+    to: string;
+    glow: string;
+    icon: typeof Star;
+    confetti: number;
+  }
 > = {
   win: {
     label: "WIN",
@@ -94,10 +102,35 @@ export function WinCelebration({
     if (config.confetti > 0) {
       import("canvas-confetti").then(({ default: confetti }) => {
         const colors = [config.from, config.to, "#ffffff", "#a855f7"];
-        confetti({ particleCount: config.confetti, spread: 100, origin: { y: 0.55 }, colors });
+        confetti({
+          particleCount: config.confetti,
+          spread: 100,
+          origin: { y: 0.55 },
+          colors,
+        });
         if (tier === "epic" || tier === "jackpot") {
-          setTimeout(() => confetti({ particleCount: config.confetti, angle: 60, spread: 80, origin: { x: 0 }, colors }), 250);
-          setTimeout(() => confetti({ particleCount: config.confetti, angle: 120, spread: 80, origin: { x: 1 }, colors }), 400);
+          setTimeout(
+            () =>
+              confetti({
+                particleCount: config.confetti,
+                angle: 60,
+                spread: 80,
+                origin: { x: 0 },
+                colors,
+              }),
+            250,
+          );
+          setTimeout(
+            () =>
+              confetti({
+                particleCount: config.confetti,
+                angle: 120,
+                spread: 80,
+                origin: { x: 1 },
+                colors,
+              }),
+            400,
+          );
         }
       });
     }
@@ -143,14 +176,18 @@ export function WinCelebration({
       >
         <span
           className="mb-3 grid h-16 w-16 place-items-center rounded-full"
-          style={{ background: `linear-gradient(180deg, ${config.from}, ${config.to})` }}
+          style={{
+            background: `linear-gradient(180deg, ${config.from}, ${config.to})`,
+          }}
         >
           <Icon className="h-8 w-8 text-ink-950" />
         </span>
         <p
           className="font-display font-black uppercase tracking-tight"
           style={{
-            fontSize: isBig ? "clamp(2.5rem, 9vw, 6rem)" : "clamp(1.75rem, 5vw, 3rem)",
+            fontSize: isBig
+              ? "clamp(2.5rem, 9vw, 6rem)"
+              : "clamp(1.75rem, 5vw, 3rem)",
             background: `linear-gradient(180deg, ${config.from}, ${config.to})`,
             WebkitBackgroundClip: "text",
             backgroundClip: "text",

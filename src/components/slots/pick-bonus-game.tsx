@@ -32,7 +32,10 @@ export interface PickBonusView {
 }
 
 /** Slot-specific art for the bonus symbols, with safe fallbacks. */
-const BONUS_ART: Record<string, { coin: string; double: string; thief: string }> = {
+const BONUS_ART: Record<
+  string,
+  { coin: string; double: string; thief: string }
+> = {
   "cat-meow": { coin: "fish", double: "paw", thief: "cat-black" },
   "neko-nights": { coin: "sushi", double: "sakura", thief: "lucky-cat" },
 };
@@ -67,7 +70,11 @@ export function PickBonusGame({
     if (pending || view.complete || revealed.has(index)) return;
     setError(null);
     startTransition(async () => {
-      const response = await pickBonusAction({ gameId, bonusId: view.id, index });
+      const response = await pickBonusAction({
+        gameId,
+        bonusId: view.id,
+        index,
+      });
       if (!response.ok || !response.data) {
         setError(response.error?.message ?? "Pick failed");
         return;
@@ -104,8 +111,12 @@ export function PickBonusGame({
         tone="gold"
         right={
           <div className="text-right">
-            <p className="text-xs uppercase tracking-wider text-text-muted">Picks left</p>
-            <p className="font-display text-lg font-bold text-gold-200">{picksRemaining}</p>
+            <p className="text-xs uppercase tracking-wider text-text-muted">
+              Picks left
+            </p>
+            <p className="font-display text-lg font-bold text-gold-200">
+              {picksRemaining}
+            </p>
           </div>
         }
       />
@@ -123,7 +134,9 @@ export function PickBonusGame({
               type="button"
               onClick={() => pick(index)}
               disabled={pending || view.complete || Boolean(cell)}
-              aria-label={cell ? `Revealed: ${cell.kind}` : `Reveal cell ${index + 1}`}
+              aria-label={
+                cell ? `Revealed: ${cell.kind}` : `Reveal cell ${index + 1}`
+              }
               className={`relative grid aspect-square place-items-center rounded-2xl border text-center transition-all duration-200 ${
                 cell
                   ? isStolen
@@ -136,7 +149,13 @@ export function PickBonusGame({
                 <div className="flex flex-col items-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={img(cell.kind === "coin" ? art.coin : cell.kind === "x2" ? art.double : art.thief)}
+                    src={img(
+                      cell.kind === "coin"
+                        ? art.coin
+                        : cell.kind === "x2"
+                          ? art.double
+                          : art.thief,
+                    )}
                     alt=""
                     className={`h-14 w-14 rounded-xl object-cover ring-2 ${
                       isStolen ? "ring-lose/60 grayscale" : "ring-gold-500/50"
@@ -173,13 +192,16 @@ export function PickBonusGame({
 
       {view.result && (
         <div className="rounded-2xl border border-gold-500/50 bg-gold-500/15 p-5 text-center glow-gold">
-          <p className="text-xs uppercase tracking-wider text-text-secondary">Bonus complete</p>
+          <p className="text-xs uppercase tracking-wider text-text-secondary">
+            Bonus complete
+          </p>
           <p className="font-display text-3xl font-black gold-text">
             +{formatBonusCoins(view.result.win)}
           </p>
           <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-xs text-text-muted">
             <span className="flex items-center gap-1">
-              <Coins className="h-3.5 w-3.5" /> {view.result.multiplierSum}x collected
+              <Coins className="h-3.5 w-3.5" /> {view.result.multiplierSum}x
+              collected
             </span>
             {view.result.doublingApplied && (
               <span className="flex items-center gap-1 text-neon-purple">
@@ -199,11 +221,14 @@ export function PickBonusGame({
 
       {view.complete && (
         <p className="flex items-center justify-center gap-2 text-sm text-text-muted">
-          <Gift className="h-4 w-4" /> Bonus finished — your winnings are already in your balance.
+          <Gift className="h-4 w-4" /> Bonus finished — your winnings are
+          already in your balance.
         </p>
       )}
 
-      {pending && <p className="text-center text-sm text-text-muted">Revealing…</p>}
+      {pending && (
+        <p className="text-center text-sm text-text-muted">Revealing…</p>
+      )}
     </div>
   );
 }

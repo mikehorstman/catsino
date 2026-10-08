@@ -6,7 +6,8 @@ import { GAMES } from "@/games/catalog";
 
 export const metadata: Metadata = {
   title: "Games",
-  description: "Browse all Catsino games — cat-themed slots and European roulette.",
+  description:
+    "Browse all Catsino games — cat-themed slots and European roulette.",
 };
 
 export default function GamesPage() {
@@ -19,12 +20,15 @@ export default function GamesPage() {
         The <span className="gold-text">Casino Floor</span>
       </h1>
       <p className="mt-2 max-w-2xl text-text-secondary">
-        Every game is powered by the same server-authoritative engine, so results
-        are always fair and always final.
+        Every game is powered by the same server-authoritative engine, so
+        results are always fair and always final.
       </p>
 
       <section className="mt-10">
-        <SectionHeading title="Live now" subtitle={`${live.length} games ready to play.`} />
+        <SectionHeading
+          title="Live now"
+          subtitle={`${live.length} games ready to play.`}
+        />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {live.map((game) => (
             <GameCard key={game.id} game={game} />
@@ -33,7 +37,12 @@ export default function GamesPage() {
       </section>
 
       <section className="mt-12">
-        <SectionHeading title="Slots" subtitle="One engine, many worlds." href="/games/slots" action="Slots hub" />
+        <SectionHeading
+          title="Slots"
+          subtitle="One engine, many worlds."
+          href="/games/slots"
+          action="Slots hub"
+        />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {slots.map((game) => (
             <GameCard key={game.id} game={game} />

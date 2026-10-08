@@ -33,7 +33,9 @@ export class ProgressionService {
     };
   }
 
-  private async grantAchievements(user: UserRecord): Promise<{ id: string; title: string; reward: number }[]> {
+  private async grantAchievements(
+    user: UserRecord,
+  ): Promise<{ id: string; title: string; reward: number }[]> {
     const stats = this.stats(user);
     const unlocked: { id: string; title: string; reward: number }[] = [];
 
@@ -60,7 +62,10 @@ export class ProgressionService {
     opts: { bet: number; win: number; isSpin: boolean },
   ): Promise<RoundOutcome> {
     const gainedXp = xpForBet(opts.bet);
-    const { newLevel, rewards, levelsGained } = resolveLevelUp(user.xp, gainedXp);
+    const { newLevel, rewards, levelsGained } = resolveLevelUp(
+      user.xp,
+      gainedXp,
+    );
 
     const patch: Partial<UserRecord> = {
       xp: user.xp + gainedXp,

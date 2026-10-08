@@ -7,7 +7,9 @@ export function Paytable({ config }: { config: SlotConfig }) {
 
   return (
     <div className="glass rounded-2xl p-5">
-      <h3 className="mb-3 font-display text-lg font-bold text-text-primary">Paytable</h3>
+      <h3 className="mb-3 font-display text-lg font-bold text-text-primary">
+        Paytable
+      </h3>
       <div className="space-y-2">
         {rows.map((symbol) => {
           const payouts = config.paytable[symbol.id] ?? {};
@@ -15,7 +17,10 @@ export function Paytable({ config }: { config: SlotConfig }) {
             .map(Number)
             .sort((a, b) => a - b);
           return (
-            <div key={symbol.id} className="flex items-center justify-between text-sm">
+            <div
+              key={symbol.id}
+              className="flex items-center justify-between text-sm"
+            >
               <span className="flex items-center gap-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -38,7 +43,9 @@ export function Paytable({ config }: { config: SlotConfig }) {
                 {counts.map((c) => (
                   <span key={c} className="ml-2">
                     <span className="text-text-muted">{c}×</span>{" "}
-                    <span className="font-semibold text-gold-200">{payouts[c]}x</span>
+                    <span className="font-semibold text-gold-200">
+                      {payouts[c]}x
+                    </span>
                   </span>
                 ))}
               </span>
@@ -47,8 +54,9 @@ export function Paytable({ config }: { config: SlotConfig }) {
         })}
       </div>
       <p className="mt-4 border-t border-ink-700 pt-3 text-xs text-text-muted">
-        Payouts are multipliers of the line bet. Wilds substitute for all regular
-        symbols. Three or more scatters award free spins with a multiplier.
+        Payouts are multipliers of the line bet. Wilds substitute for all
+        regular symbols. Three or more scatters award free spins with a
+        multiplier.
       </p>
     </div>
   );

@@ -34,7 +34,8 @@ async function getAccessToken() {
     }),
   });
   const json = await res.json();
-  if (!res.ok) throw new Error(`Token exchange failed: ${JSON.stringify(json)}`);
+  if (!res.ok)
+    throw new Error(`Token exchange failed: ${JSON.stringify(json)}`);
   return json.access_token;
 }
 
@@ -84,14 +85,15 @@ const create = await api(
   },
 );
 if (create.ok) console.log(`✓ Service account created: ${SA_EMAIL}`);
-else if (create.status === 409) console.log(`✓ Service account already exists: ${SA_EMAIL}`);
-else console.log(`! Service account create returned ${create.status}: ${JSON.stringify(create.json)}`);
+else if (create.status === 409)
+  console.log(`✓ Service account already exists: ${SA_EMAIL}`);
+else
+  console.log(
+    `! Service account create returned ${create.status}: ${JSON.stringify(create.json)}`,
+  );
 
 // 3. Grant Firestore + Firebase roles.
-const ROLES = [
-  "roles/datastore.user",
-  "roles/firebase.sdkAdminServiceAgent",
-];
+const ROLES = ["roles/datastore.user", "roles/firebase.sdkAdminServiceAgent"];
 for (const role of ROLES) {
   const bind = await api(
     token,
@@ -112,16 +114,22 @@ for (const role of ROLES) {
     `https://cloudresourcemanager.googleapis.com/v1/projects/${PROJECT_ID}:setIamPolicy`,
     { method: "POST", body: JSON.stringify({ policy }) },
   );
-  console.log(set.ok ? `✓ Granted ${role}` : `! Grant ${role} -> ${set.status}`);
+  console.log(
+    set.ok ? `✓ Granted ${role}` : `! Grant ${role} -> ${set.status}`,
+  );
 }
 
 // 4. Create a JSON key.
 const key = await api(
   token,
   `https://iam.googleapis.com/v1/projects/${PROJECT_ID}/serviceAccounts/${SA_EMAIL}/keys`,
-  { method: "POST", body: JSON.stringify({ keyAlgorithm: "KEY_ALG_RSA_2048" }) },
+  {
+    method: "POST",
+    body: JSON.stringify({ keyAlgorithm: "KEY_ALG_RSA_2048" }),
+  },
 );
-if (!key.ok) throw new Error(`Key creation failed: ${JSON.stringify(key.json)}`);
+if (!key.ok)
+  throw new Error(`Key creation failed: ${JSON.stringify(key.json)}`);
 
 const decoded = Buffer.from(key.json.privateKeyData, "base64").toString("utf8");
 const outDir = join(process.cwd(), ".secrets");

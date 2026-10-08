@@ -31,7 +31,9 @@ declare global {
 export function getStore(): Store {
   if (!globalThis.__catsinoStore) {
     globalThis.__catsinoStore =
-      backend() === "firestore" ? new FirestoreStore() : new MemoryStore(resolveFile());
+      backend() === "firestore"
+        ? new FirestoreStore()
+        : new MemoryStore(resolveFile());
   }
   return globalThis.__catsinoStore;
 }

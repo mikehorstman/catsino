@@ -23,14 +23,21 @@ export default async function ProfilePage() {
   const def = levelDef(user.level);
   const nextXp = xpToNextLevel(user.level);
   const currentLevelFloor = def.xpRequired;
-  const progress = nextXp > 0 ? Math.min(100, ((user.xp - currentLevelFloor) / nextXp) * 100) : 100;
-  const winRate = user.totalRounds > 0 ? (user.totalWins / user.totalRounds) * 100 : 0;
+  const progress =
+    nextXp > 0
+      ? Math.min(100, ((user.xp - currentLevelFloor) / nextXp) * 100)
+      : 100;
+  const winRate =
+    user.totalRounds > 0 ? (user.totalWins / user.totalRounds) * 100 : 0;
   const net = user.totalWon - user.totalWagered;
   const recent = await store.listRounds(user.id, { limit: 10 });
 
   return (
     <PageShell>
-      <SectionHeading title="Your Profile" subtitle="Stats, progression and recent play." />
+      <SectionHeading
+        title="Your Profile"
+        subtitle="Stats, progression and recent play."
+      />
 
       <div className="grid gap-5 lg:grid-cols-3">
         {/* Identity + level */}
@@ -40,7 +47,9 @@ export default async function ProfilePage() {
               🐱
             </span>
             <div>
-              <p className="font-display text-lg font-bold text-text-primary">{user.displayName}</p>
+              <p className="font-display text-lg font-bold text-text-primary">
+                {user.displayName}
+              </p>
               <p className="text-sm text-text-muted">{user.email}</p>
             </div>
           </div>
@@ -49,9 +58,7 @@ export default async function ProfilePage() {
               <span className="font-semibold text-gold-200">
                 Level {user.level} · {def.title}
               </span>
-              <span className="text-text-muted">
-                {formatCoins(user.xp)} XP
-              </span>
+              <span className="text-text-muted">{formatCoins(user.xp)} XP</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-ink-700">
               <div
@@ -61,18 +68,27 @@ export default async function ProfilePage() {
             </div>
             {nextXp > 0 && (
               <p className="mt-1 text-xs text-text-muted">
-                {formatCoins(nextXp - (user.xp - currentLevelFloor))} XP to level {user.level + 1}
+                {formatCoins(nextXp - (user.xp - currentLevelFloor))} XP to
+                level {user.level + 1}
               </p>
             )}
           </div>
           <div className="mt-5 grid grid-cols-2 gap-3 text-center">
             <div className="rounded-xl bg-ink-800/60 p-3">
-              <p className="text-xs uppercase tracking-wider text-text-muted">Balance</p>
-              <p className="font-display text-lg font-bold text-gold-200">{formatCoins(balance)}</p>
+              <p className="text-xs uppercase tracking-wider text-text-muted">
+                Balance
+              </p>
+              <p className="font-display text-lg font-bold text-gold-200">
+                {formatCoins(balance)}
+              </p>
             </div>
             <div className="rounded-xl bg-ink-800/60 p-3">
-              <p className="text-xs uppercase tracking-wider text-text-muted">Net</p>
-              <p className={`font-display text-lg font-bold ${net >= 0 ? "text-win" : "text-lose"}`}>
+              <p className="text-xs uppercase tracking-wider text-text-muted">
+                Net
+              </p>
+              <p
+                className={`font-display text-lg font-bold ${net >= 0 ? "text-win" : "text-lose"}`}
+              >
                 {net >= 0 ? "+" : ""}
                 {formatCoins(net)}
               </p>
@@ -85,14 +101,23 @@ export default async function ProfilePage() {
 
         {/* Stats */}
         <div className="glass rounded-2xl p-5 lg:col-span-2">
-          <h3 className="mb-4 font-display text-lg font-bold text-text-primary">Statistics</h3>
+          <h3 className="mb-4 font-display text-lg font-bold text-text-primary">
+            Statistics
+          </h3>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <Stat label="Rounds played" value={formatCoins(user.totalRounds)} />
             <Stat label="Rounds won" value={formatCoins(user.totalWins)} />
             <Stat label="Win rate" value={`${winRate.toFixed(1)}%`} />
             <Stat label="Total spins" value={formatCoins(user.totalSpins)} />
-            <Stat label="Total wagered" value={formatCoins(user.totalWagered)} />
-            <Stat label="Biggest win" value={formatCoins(user.biggestWin)} highlight />
+            <Stat
+              label="Total wagered"
+              value={formatCoins(user.totalWagered)}
+            />
+            <Stat
+              label="Biggest win"
+              value={formatCoins(user.biggestWin)}
+              highlight
+            />
           </div>
           <div className="mt-5 flex items-center gap-2">
             <Badge tone="gold">{user.achievements.length} achievements</Badge>
@@ -102,18 +127,34 @@ export default async function ProfilePage() {
       </div>
 
       <section className="mt-10">
-        <SectionHeading title="Recent games" href="/history" action="Full history" />
+        <SectionHeading
+          title="Recent games"
+          href="/history"
+          action="Full history"
+        />
         <GameHistoryTable rounds={recent} compact />
       </section>
     </PageShell>
   );
 }
 
-function Stat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+function Stat({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
   return (
     <div className="rounded-xl bg-ink-800/50 p-4">
-      <p className="text-xs uppercase tracking-wider text-text-muted">{label}</p>
-      <p className={`mt-1 font-display text-xl font-bold ${highlight ? "gold-text" : "text-text-primary"}`}>
+      <p className="text-xs uppercase tracking-wider text-text-muted">
+        {label}
+      </p>
+      <p
+        className={`mt-1 font-display text-xl font-bold ${highlight ? "gold-text" : "text-text-primary"}`}
+      >
         {value}
       </p>
     </div>

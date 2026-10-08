@@ -59,7 +59,9 @@ export class SlotReels {
     await Promise.all(
       ids.map(async (id) => {
         try {
-          const texture = await Assets.load<Texture>(symbolImage(this.config.id, id));
+          const texture = await Assets.load<Texture>(
+            symbolImage(this.config.id, id),
+          );
           this.textures.set(id, texture);
         } catch {
           // Missing photo — the emoji fallback covers it.
@@ -80,7 +82,10 @@ export class SlotReels {
       height: this.cellH * this.rows,
       backgroundAlpha: 0,
       antialias: true,
-      resolution: Math.min(2, typeof window !== "undefined" ? window.devicePixelRatio : 1),
+      resolution: Math.min(
+        2,
+        typeof window !== "undefined" ? window.devicePixelRatio : 1,
+      ),
       autoDensity: true,
     });
     if (this.app.canvas) host.appendChild(this.app.canvas);
@@ -107,17 +112,27 @@ export class SlotReels {
       sprite.anchor.set(0.5);
       sprite.position.set(this.cellW / 2, this.cellH / 2);
 
-      const mask = new Graphics().roundRect(pad, pad, w, h, radius).fill(0xffffff);
+      const mask = new Graphics()
+        .roundRect(pad, pad, w, h, radius)
+        .fill(0xffffff);
       sprite.mask = mask;
       cell.addChild(mask, sprite);
 
       // Gold rim on wild/scatter symbols so they read as special.
       const symbol = this.config.symbols.find((s) => s.id === symbolId);
       const rimColour =
-        symbol?.kind === "wild" ? 0xf0d27a : symbol?.kind === "scatter" ? 0xec4899 : 0x2a2a38;
+        symbol?.kind === "wild"
+          ? 0xf0d27a
+          : symbol?.kind === "scatter"
+            ? 0xec4899
+            : 0x2a2a38;
       const rim = new Graphics()
         .roundRect(pad, pad, w, h, radius)
-        .stroke({ width: symbol?.kind === "regular" ? 2 : 3, color: rimColour, alpha: symbol?.kind === "regular" ? 0.6 : 1 });
+        .stroke({
+          width: symbol?.kind === "regular" ? 2 : 3,
+          color: rimColour,
+          alpha: symbol?.kind === "regular" ? 0.6 : 1,
+        });
       cell.addChild(rim);
     } else {
       // Fallback tile with emoji.
@@ -165,18 +180,35 @@ export class SlotReels {
 
       this.app.stage.addChild(container);
       this.setColumnOffset(container, tiles, strip, 0);
-      this.reels.push({ container, tiles, strip, offset: 0, speed: 0, spinning: false, blur });
+      this.reels.push({
+        container,
+        tiles,
+        strip,
+        offset: 0,
+        speed: 0,
+        spinning: false,
+        blur,
+      });
     }
     this.app.stage.addChild(this.overlay);
     // Bring overlay to the front each time it is used.
-    this.app.stage.setChildIndex(this.overlay, this.app.stage.children.length - 1);
+    this.app.stage.setChildIndex(
+      this.overlay,
+      this.app.stage.children.length - 1,
+    );
   }
 
   /** Position tiles for a given pixel offset, wrapping around the strip. */
-  private setColumnOffset(container: Container, tiles: Container[], strip: string[], offset: number) {
+  private setColumnOffset(
+    container: Container,
+    tiles: Container[],
+    strip: string[],
+    offset: number,
+  ) {
     if (this.destroyed) return;
     const L = strip.length;
-    const wrapped = ((offset % (L * this.cellH)) + L * this.cellH) % (L * this.cellH);
+    const wrapped =
+      ((offset % (L * this.cellH)) + L * this.cellH) % (L * this.cellH);
     const shift = Math.floor(wrapped / this.cellH);
     const frac = wrapped - shift * this.cellH;
     for (let i = 0; i < L; i += 1) {
@@ -186,8 +218,9 @@ export class SlotReels {
       const idx = (i - shift + L * 2) % L;
       tile.y = idx * this.cellH - frac;
       // Hide tiles far outside the window for performance.
-      tile.visible = tile.y > -this.cellH * 1.5 && tile.y < this.cellH * (this.rows + 0.5);
-      const symbol = strip[((i - shift) % L + L) % L];
+      tile.visible =
+        tile.y > -this.cellH * 1.5 && tile.y < this.cellH * (this.rows + 0.5);
+      const symbol = strip[(((i - shift) % L) + L) % L];
       void symbol;
     }
     void container;
@@ -198,7 +231,12 @@ export class SlotReels {
       for (const reel of this.reels) {
         if (!reel.spinning) continue;
         reel.offset += reel.speed;
-        this.setColumnOffset(reel.container, reel.tiles, reel.strip, reel.offset);
+        this.setColumnOffset(
+          reel.container,
+          reel.tiles,
+          reel.strip,
+          reel.offset,
+        );
       }
     };
     this.app.ticker.add(this.tickerFn);
@@ -246,7 +284,13 @@ export class SlotReels {
               offset: target,
               duration: 0.9 + col * 0.12,
               ease: "power3.out",
-              onUpdate: () => this.setColumnOffset(reel.container, reel.tiles, reel.strip, reel.offset),
+              onUpdate: () =>
+                this.setColumnOffset(
+                  reel.container,
+                  reel.tiles,
+                  reel.strip,
+                  reel.offset,
+                ),
               onComplete: () => resolve(),
             });
           }),
@@ -265,12 +309,24 @@ export class SlotReels {
         y: p.row * this.cellH + this.cellH / 2,
       }));
       this.overlay.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i += 1) this.overlay.lineTo(points[i].x, points[i].y);
-      this.overlay.stroke({ width: 4, color: 0xf0d27a, alpha: 0.9, cap: "round" });
+      for (let i = 1; i < points.length; i += 1)
+        this.overlay.lineTo(points[i].x, points[i].y);
+      this.overlay.stroke({
+        width: 4,
+        color: 0xf0d27a,
+        alpha: 0.9,
+        cap: "round",
+      });
 
       for (const p of points) {
         this.overlay
-          .roundRect(p.x - this.cellW / 2 + pad, p.y - this.cellH / 2 + pad, this.cellW - pad * 2, this.cellH - pad * 2, 12)
+          .roundRect(
+            p.x - this.cellW / 2 + pad,
+            p.y - this.cellH / 2 + pad,
+            this.cellW - pad * 2,
+            this.cellH - pad * 2,
+            12,
+          )
           .stroke({ width: 3, color: 0xf0d27a, alpha: 0.8 });
       }
     }

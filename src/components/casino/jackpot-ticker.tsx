@@ -46,8 +46,12 @@ export function JackpotTicker({
     return (
       <div className="flex items-center gap-2 rounded-full border border-gold-500/40 bg-gradient-to-r from-gold-500/15 to-neon-purple/15 px-3 py-1.5">
         <Crown className="h-4 w-4 text-gold-300" />
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-gold-200/80">Jackpot</span>
-        <span className={`font-display text-sm font-black tabular-nums ${flash ? "text-white" : "gold-text"}`}>
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-gold-200/80">
+          Jackpot
+        </span>
+        <span
+          className={`font-display text-sm font-black tabular-nums ${flash ? "text-white" : "gold-text"}`}
+        >
           {formatCoins(display)}
         </span>
       </div>
@@ -67,7 +71,9 @@ export function JackpotTicker({
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-200/80">
               Catsino Mega Jackpot
             </p>
-            <p className="text-xs text-text-muted">Grows with every spin · win it all</p>
+            <p className="text-xs text-text-muted">
+              Grows with every spin · win it all
+            </p>
           </div>
         </div>
         <p

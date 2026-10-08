@@ -5,7 +5,10 @@
  */
 const chains = new Map<string, Promise<unknown>>();
 
-export async function withLock<T>(key: string, fn: () => Promise<T> | T): Promise<T> {
+export async function withLock<T>(
+  key: string,
+  fn: () => Promise<T> | T,
+): Promise<T> {
   const previous = chains.get(key) ?? Promise.resolve();
   let release!: () => void;
   const gate = new Promise<void>((resolve) => {

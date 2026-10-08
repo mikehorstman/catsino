@@ -27,7 +27,15 @@ function simpleConfig(): SlotConfig {
       A: { 3: 10 },
       S: { 3: 5 },
     },
-    features: [{ type: "freeSpins", triggerSymbol: "S", triggerCount: 3, spins: 10, multiplier: 2 }],
+    features: [
+      {
+        type: "freeSpins",
+        triggerSymbol: "S",
+        triggerCount: 3,
+        spins: 10,
+        multiplier: 2,
+      },
+    ],
     betLevels: [10],
     rtpTarget: 0.95,
   };
@@ -86,7 +94,11 @@ describe("spinSlot", () => {
 
   it("awards free spins when scatters hit the trigger count", () => {
     const config = simpleConfig();
-    config.reelStrips = [["A", "S"], ["A", "S"], ["A", "S"]];
+    config.reelStrips = [
+      ["A", "S"],
+      ["A", "S"],
+      ["A", "S"],
+    ];
     // Build a grid full of scatters by picking the same index on every reel
     const result = spinSlot(config, 10, createSeededRng(7));
     // Regardless of outcome, free spins state must be consistent

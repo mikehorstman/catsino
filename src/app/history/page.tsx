@@ -32,7 +32,12 @@ export default async function HistoryPage({
   const page = Math.max(1, Number(sp.page) || 1);
   const store = getStore();
 
-  const opts: { kind?: string; result?: "win" | "loss"; limit: number; offset: number } = {
+  const opts: {
+    kind?: string;
+    result?: "win" | "loss";
+    limit: number;
+    offset: number;
+  } = {
     limit: PAGE_SIZE,
     offset: (page - 1) * PAGE_SIZE,
   };
@@ -55,7 +60,10 @@ export default async function HistoryPage({
 
   return (
     <PageShell>
-      <SectionHeading title="Game History" subtitle={`${total} rounds played.`} />
+      <SectionHeading
+        title="Game History"
+        subtitle={`${total} rounds played.`}
+      />
 
       <div className="mb-5 flex flex-wrap gap-2">
         {FILTERS.map((f) => (
@@ -79,7 +87,10 @@ export default async function HistoryPage({
       {totalPages > 1 && (
         <div className="mt-5 flex items-center justify-center gap-2">
           {page > 1 && (
-            <Link href={href({ page: page - 1 })} className="rounded-lg border border-ink-600 px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary">
+            <Link
+              href={href({ page: page - 1 })}
+              className="rounded-lg border border-ink-600 px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary"
+            >
               Previous
             </Link>
           )}
@@ -87,7 +98,10 @@ export default async function HistoryPage({
             Page {page} of {totalPages}
           </span>
           {page < totalPages && (
-            <Link href={href({ page: page + 1 })} className="rounded-lg border border-ink-600 px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary">
+            <Link
+              href={href({ page: page + 1 })}
+              className="rounded-lg border border-ink-600 px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary"
+            >
               Next
             </Link>
           )}

@@ -22,7 +22,10 @@ export class RouletteWheel {
       height: size,
       backgroundAlpha: 0,
       antialias: true,
-      resolution: Math.min(2, typeof window !== "undefined" ? window.devicePixelRatio : 1),
+      resolution: Math.min(
+        2,
+        typeof window !== "undefined" ? window.devicePixelRatio : 1,
+      ),
       autoDensity: true,
     });
     if (this.app.canvas) host.appendChild(this.app.canvas);
@@ -69,7 +72,10 @@ export class RouletteWheel {
     });
 
     const hub = new Graphics();
-    hub.circle(cx, cy, this.radius * 0.42).fill(0x16161f).stroke({ width: 3, color: 0xd4af37 });
+    hub
+      .circle(cx, cy, this.radius * 0.42)
+      .fill(0x16161f)
+      .stroke({ width: 3, color: 0xd4af37 });
     this.wheel.addChild(hub);
     this.wheel.pivot.set(cx, cy);
     this.wheel.position.set(cx, cy);
@@ -93,8 +99,10 @@ export class RouletteWheel {
         onUpdate: () => {
           // Ball orbits opposite the wheel for realism.
           const t = this.wheel.rotation;
-          this.ball.x = this.wheel.position.x + Math.sin(-t * 0.15) * this.radius * 0.8;
-          this.ball.y = this.wheel.position.y - Math.cos(-t * 0.15) * this.radius * 0.8;
+          this.ball.x =
+            this.wheel.position.x + Math.sin(-t * 0.15) * this.radius * 0.8;
+          this.ball.y =
+            this.wheel.position.y - Math.cos(-t * 0.15) * this.radius * 0.8;
         },
         onComplete: () => {
           this.ball.x = this.wheel.position.x;

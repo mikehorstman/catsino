@@ -1,6 +1,11 @@
 import type { Rng } from "../rng/types";
 import { RETRIGGER_MULTIPLIER_STEP } from "./constants";
-import type { PickBonusFeature, PickBonusResult, PickCell, SpinState } from "./types";
+import type {
+  PickBonusFeature,
+  PickBonusResult,
+  PickCell,
+  SpinState,
+} from "./types";
 
 /**
  * Pick-and-win bonus board generation.
@@ -14,7 +19,10 @@ export interface GeneratedBoard {
   cells: PickCell[];
 }
 
-export function generatePickBoard(feature: PickBonusFeature, rng: Rng): GeneratedBoard {
+export function generatePickBoard(
+  feature: PickBonusFeature,
+  rng: Rng,
+): GeneratedBoard {
   const count = feature.rows * feature.cols;
 
   // Kinds: coin / x2 / thief. Any leftover cells are plain "coin" placeholders
@@ -27,7 +35,10 @@ export function generatePickBoard(feature: PickBonusFeature, rng: Rng): Generate
 
   // Assign coin values. The values are drawn from the configured pool then
   // reshuffled so positions and values are independent.
-  const values = Array.from({ length: count }, (_, i) => feature.multipliers[i % feature.multipliers.length]);
+  const values = Array.from(
+    { length: count },
+    (_, i) => feature.multipliers[i % feature.multipliers.length],
+  );
   shuffle(values, rng);
 
   const cells: PickCell[] = [];
@@ -36,7 +47,8 @@ export function generatePickBoard(feature: PickBonusFeature, rng: Rng): Generate
     cells.push({
       index: i,
       kind,
-      multiplier: kind === "coin" ? values[i] : kind === "x2" ? 1 : feature.thiefSteal,
+      multiplier:
+        kind === "coin" ? values[i] : kind === "x2" ? 1 : feature.thiefSteal,
     });
   }
   return { feature, cells };
@@ -77,7 +89,9 @@ export function settlePickBonus(
   const net = Math.max(0, multiplierSum - thiefSteal);
 
   // Mark the stolen cell so the UI can flag it.
-  const cells = board.cells.map((c) => (c.index === thiefIndex ? { ...c, stolen: true } : c));
+  const cells = board.cells.map((c) =>
+    c.index === thiefIndex ? { ...c, stolen: true } : c,
+  );
 
   return {
     cells,

@@ -15,7 +15,9 @@ describe("guest accounts", () => {
     expect(guest.isGuest).toBe(true);
     expect(guest.passwordHash).toBe("");
     expect(guest.level).toBe(1);
-    expect(await new WalletService(store).getBalance(guest.id)).toBe(WELCOME_BONUS);
+    expect(await new WalletService(store).getBalance(guest.id)).toBe(
+      WELCOME_BONUS,
+    );
   });
 
   it("reuses the provided id so the guest is stable across requests", async () => {
@@ -39,6 +41,8 @@ describe("guest accounts", () => {
 
     expect(response.kind).toBe("slots");
     expect(await store.countRounds(guest.id)).toBe(1);
-    expect(await new WalletService(store).getBalance(guest.id)).toBeGreaterThanOrEqual(0);
+    expect(
+      await new WalletService(store).getBalance(guest.id),
+    ).toBeGreaterThanOrEqual(0);
   });
 });

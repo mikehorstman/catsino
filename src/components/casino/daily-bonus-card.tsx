@@ -37,7 +37,12 @@ export function DailyBonusCard({
         setBalance(useBalanceStore.getState().balance + result.data.amount);
         play("coin");
         import("canvas-confetti").then(({ default: confetti }) => {
-          confetti({ particleCount: 90, spread: 70, origin: { y: 0.7 }, colors: ["#d4af37", "#f0d27a", "#a855f7"] });
+          confetti({
+            particleCount: 90,
+            spread: 70,
+            origin: { y: 0.7 },
+            colors: ["#d4af37", "#f0d27a", "#a855f7"],
+          });
         });
       } else {
         setError(result.error?.message ?? "Could not claim");
@@ -47,7 +52,10 @@ export function DailyBonusCard({
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-gold-500/40 bg-gradient-to-br from-ink-800 via-ink-900 to-neon-purple/10 p-5 shadow-glow-gold">
-      <div className="pointer-events-none absolute -right-8 -top-8 text-9xl opacity-10" aria-hidden>
+      <div
+        className="pointer-events-none absolute -right-8 -top-8 text-9xl opacity-10"
+        aria-hidden
+      >
         🐟
       </div>
       <div className="relative">
@@ -56,9 +64,12 @@ export function DailyBonusCard({
             <Gift className="h-6 w-6" />
           </span>
           <div>
-            <h3 className="font-display text-lg font-black text-text-primary">Daily Bonus</h3>
+            <h3 className="font-display text-lg font-black text-text-primary">
+              Daily Bonus
+            </h3>
             <p className="flex items-center gap-1 text-xs text-text-muted">
-              <Flame className="h-3 w-3 text-gold-400" /> Day {streak} streak · bigger every day
+              <Flame className="h-3 w-3 text-gold-400" /> Day {streak} streak ·
+              bigger every day
             </p>
           </div>
         </div>
@@ -80,8 +91,12 @@ export function DailyBonusCard({
                       : "border-ink-700 bg-ink-800/60"
                 }`}
               >
-                <span className="text-[9px] uppercase tracking-wider text-text-muted">D{day}</span>
-                <span className={`text-xs font-bold ${done ? "text-win" : current ? "text-gold-200" : "text-text-muted"}`}>
+                <span className="text-[9px] uppercase tracking-wider text-text-muted">
+                  D{day}
+                </span>
+                <span
+                  className={`text-xs font-bold ${done ? "text-win" : current ? "text-gold-200" : "text-text-muted"}`}
+                >
                   {done ? "✓" : `+${500 + 100 * (day - 1)}`}
                 </span>
               </div>
@@ -95,7 +110,11 @@ export function DailyBonusCard({
               {claimed ? "Claimed today" : "Ready to claim"}
             </p>
             <p className="font-display text-2xl font-black gold-text">
-              {claimed ? (rewarded ? `+${formatCoins(rewarded)}` : "Done") : `+${formatCoins(nextReward)}`}
+              {claimed
+                ? rewarded
+                  ? `+${formatCoins(rewarded)}`
+                  : "Done"
+                : `+${formatCoins(nextReward)}`}
             </p>
           </div>
           <Button

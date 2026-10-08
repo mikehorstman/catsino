@@ -32,7 +32,11 @@ export async function generateMetadata({
   };
 }
 
-export default async function SlotPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function SlotPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
   const config = getSlotConfig(slug);
   if (!config) notFound();
@@ -61,9 +65,13 @@ export default async function SlotPage({ params }: { params: Promise<{ slug: str
         <aside className="space-y-5">
           <Paytable config={config} />
           <div className="glass rounded-2xl p-5 text-sm text-text-muted">
-            <h3 className="mb-2 font-display text-base font-bold text-text-primary">How it plays</h3>
+            <h3 className="mb-2 font-display text-base font-bold text-text-primary">
+              How it plays
+            </h3>
             <ul className="list-inside list-disc space-y-1">
-              <li>{config.cols} reels × {config.rows} rows</li>
+              <li>
+                {config.cols} reels × {config.rows} rows
+              </li>
               <li>{config.paylines.length} fixed paylines</li>
               <li>Wilds substitute for any regular symbol</li>
               <li>3+ scatters trigger free spins with a multiplier</li>

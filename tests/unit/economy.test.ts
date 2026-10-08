@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { levelForXp, levelDef, resolveLevelUp, xpForBet, xpToNextLevel } from "@/games/progression";
+import {
+  levelForXp,
+  levelDef,
+  resolveLevelUp,
+  xpForBet,
+  xpToNextLevel,
+} from "@/games/progression";
 import { WalletService, WalletError } from "@/server/store/wallet";
 import { createMemoryStore } from "@/server/store/memory";
 import { BonusService } from "@/server/services/bonus";
@@ -50,7 +56,9 @@ describe("progression", () => {
   it("has a strictly increasing xp curve", () => {
     for (let level = 1; level < 10; level += 1) {
       expect(xpToNextLevel(level)).toBeGreaterThan(0);
-      expect(levelDef(level + 1).xpRequired).toBeGreaterThan(levelDef(level).xpRequired);
+      expect(levelDef(level + 1).xpRequired).toBeGreaterThan(
+        levelDef(level).xpRequired,
+      );
     }
   });
 });
@@ -62,7 +70,12 @@ describe("WalletService", () => {
     await store.createUser(makeUser());
     await store.putWallet({ userId: "u1", balance: 0, version: 0 });
     // Seed the starting balance through the ledger so `verify` stays consistent.
-    await wallet.apply({ userId: "u1", type: "welcome", amount: 1000, refType: "test" });
+    await wallet.apply({
+      userId: "u1",
+      type: "welcome",
+      amount: 1000,
+      refType: "test",
+    });
     return { store, wallet };
   }
 
@@ -70,19 +83,25 @@ describe("WalletService", () => {
     const { wallet, store } = await setup();
     await wallet.apply({ userId: "u1", type: "daily-bonus", amount: 500 });
     expect(await wallet.getBalance("u1")).toBe(1500);
-    const bonusEntries = (await store.listTransactions("u1")).filter((t) => t.type === "daily-bonus");
+    const bonusEntries = (await store.listTransactions("u1")).filter(
+      (t) => t.type === "daily-bonus",
+    );
     expect(bonusEntries).toHaveLength(1);
   });
 
   it("throws on insufficient funds and does not mutate", async () => {
     const { wallet } = await setup();
-    await expect(wallet.apply({ userId: "u1", type: "bet", amount: -2000 })).rejects.toThrow(WalletError);
+    await expect(
+      wallet.apply({ userId: "u1", type: "bet", amount: -2000 }),
+    ).rejects.toThrow(WalletError);
     expect(await wallet.getBalance("u1")).toBe(1000);
   });
 
   it("rejects non-integer amounts", async () => {
     const { wallet } = await setup();
-    await expect(wallet.apply({ userId: "u1", type: "win", amount: 10.5 })).rejects.toThrow(WalletError);
+    await expect(
+      wallet.apply({ userId: "u1", type: "win", amount: 10.5 }),
+    ).rejects.toThrow(WalletError);
   });
 
   it("keeps cached balance equal to the ledger", async () => {
@@ -95,7 +114,9 @@ describe("WalletService", () => {
 
   it("rolls back the debit when the bet is unaffordable in settleRound", async () => {
     const { wallet } = await setup();
-    await expect(wallet.settleRound("u1", 5000, 0, "r0")).rejects.toThrow(WalletError);
+    await expect(wallet.settleRound("u1", 5000, 0, "r0")).rejects.toThrow(
+      WalletError,
+    );
     expect(await wallet.getBalance("u1")).toBe(1000);
   });
 });
@@ -139,7 +160,10 @@ describe("BonusService", () => {
   });
 
   it("resets the streak when a day was missed", async () => {
-    const { bonus, user } = await setup({ lastDailyClaim: "2020-01-01", dailyStreak: 5 });
+    const { bonus, user } = await setup({
+      lastDailyClaim: "2020-01-01",
+      dailyStreak: 5,
+    });
     const result = await bonus.claimDaily(user);
     expect(result.streak).toBe(1);
   });

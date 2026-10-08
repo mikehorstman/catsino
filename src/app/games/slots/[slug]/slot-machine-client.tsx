@@ -15,7 +15,9 @@ const SlotMachine = dynamic(
     ssr: false,
     loading: () => (
       <div className="grid h-[420px] place-items-center rounded-3xl border border-gold-500/20 bg-ink-800/40">
-        <span className="animate-pulse font-display text-lg text-gold-200">Loading reels…</span>
+        <span className="animate-pulse font-display text-lg text-gold-200">
+          Loading reels…
+        </span>
       </div>
     ),
   },

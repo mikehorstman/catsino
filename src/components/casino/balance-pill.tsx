@@ -29,15 +29,22 @@ export function BalancePill({
 
   return (
     <div
-      className={cn("glass flex items-center gap-2 rounded-full py-1.5 pl-2 pr-4", className)}
+      className={cn(
+        "glass flex items-center gap-2 rounded-full py-1.5 pl-2 pr-4",
+        className,
+      )}
       aria-label={`Balance ${value} coins`}
     >
       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-b from-gold-300 to-gold-600 text-ink-950">
         <Coins className="h-4 w-4" />
       </span>
-      <AnimatedNumber value={value} className="font-display text-base font-bold text-gold-200" />
-      <span className="text-xs font-semibold uppercase tracking-wider text-gold-300/70">coins</span>
+      <AnimatedNumber
+        value={value}
+        className="font-display text-base font-bold text-gold-200"
+      />
+      <span className="text-xs font-semibold uppercase tracking-wider text-gold-300/70">
+        coins
+      </span>
     </div>
   );
 }
-

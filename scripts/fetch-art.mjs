@@ -76,7 +76,9 @@ function loadCredits() {
 
 async function searchOpenverse(query) {
   const url = `https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&page_size=8&license_type=commercial&mature=false`;
-  const res = await fetch(url, { headers: { "User-Agent": "Catsino/1.0 (portfolio project)" } });
+  const res = await fetch(url, {
+    headers: { "User-Agent": "Catsino/1.0 (portfolio project)" },
+  });
   if (!res.ok) throw new Error(`openverse ${res.status}`);
   const json = await res.json();
   return json.results ?? [];
@@ -95,20 +97,32 @@ function normaliseSquare(inputPath, outputPath) {
   // side), then scale up to SIZE. Doing it the other way round leaves black
   // letterbox bars.
   try {
-    const info = execFileSync("sips", ["-g", "pixelWidth", "-g", "pixelHeight", inputPath], {
-      encoding: "utf8",
-    });
+    const info = execFileSync(
+      "sips",
+      ["-g", "pixelWidth", "-g", "pixelHeight", inputPath],
+      {
+        encoding: "utf8",
+      },
+    );
     const width = Number(info.match(/pixelWidth:\s*(\d+)/)?.[1] ?? SIZE);
     const height = Number(info.match(/pixelHeight:\s*(\d+)/)?.[1] ?? SIZE);
     const side = Math.min(width, height);
 
     const square = outputPath.replace(/\.jpg$/, ".sq.jpg");
-    execFileSync("sips", ["-c", String(side), String(side), inputPath, "--out", square], {
-      stdio: "ignore",
-    });
-    execFileSync("sips", ["-s", "format", "jpeg", "-Z", String(SIZE), square, "--out", outputPath], {
-      stdio: "ignore",
-    });
+    execFileSync(
+      "sips",
+      ["-c", String(side), String(side), inputPath, "--out", square],
+      {
+        stdio: "ignore",
+      },
+    );
+    execFileSync(
+      "sips",
+      ["-s", "format", "jpeg", "-Z", String(SIZE), square, "--out", outputPath],
+      {
+        stdio: "ignore",
+      },
+    );
     execFileSync("rm", ["-f", square]);
   } catch {
     // Fall back to the raw bytes if sips is unavailable (non-macOS dev).
@@ -153,9 +167,15 @@ async function fetchOne(relPath, query, credits) {
 async function fetchCatFallback(relPath, credits) {
   const out = join(ART, `${relPath}.jpg`);
   try {
-    const bytes = await download(`https://cataas.com/cat?width=${SIZE}&height=${SIZE}&t=${Date.now()}`);
+    const bytes = await download(
+      `https://cataas.com/cat?width=${SIZE}&height=${SIZE}&t=${Date.now()}`,
+    );
     writeFileSync(out, bytes);
-    credits[relPath] = { query: "cataas random cat", provider: "cataas.com", license: "cataas usage terms" };
+    credits[relPath] = {
+      query: "cataas random cat",
+      provider: "cataas.com",
+      license: "cataas usage terms",
+    };
     console.log(`fallback ok ${relPath}`);
   } catch (error) {
     console.log(`fallback FAIL ${relPath} — ${error.message}`);
@@ -175,14 +195,19 @@ async function main() {
       const rel = `slots/${slot}/${symbol}`;
       await fetchOne(rel, query, credits);
       // Cats get a guaranteed real-photo fallback.
-      if (!existsSync(join(ART, `${rel}.jpg`)) && (query.includes("cat") || query.includes("neko"))) {
+      if (
+        !existsSync(join(ART, `${rel}.jpg`)) &&
+        (query.includes("cat") || query.includes("neko"))
+      ) {
         await fetchCatFallback(rel, credits);
       }
     }
   }
 
   writeFileSync(CREDITS_FILE, JSON.stringify(credits, null, 2));
-  console.log(`\nWrote ${Object.keys(credits).length} credits to public/art/CREDITS.json`);
+  console.log(
+    `\nWrote ${Object.keys(credits).length} credits to public/art/CREDITS.json`,
+  );
 }
 
 main().catch((error) => {

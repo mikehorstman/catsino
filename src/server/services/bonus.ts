@@ -10,10 +10,7 @@ export const REFILL_COOLDOWN_HOURS = 1;
 /** Only allow a refill when the player cannot afford the cheapest bet. */
 export const REFILL_THRESHOLD = 10;
 
-export type BonusError =
-  | "ALREADY_CLAIMED"
-  | "NOT_ELIGIBLE"
-  | "COOLDOWN";
+export type BonusError = "ALREADY_CLAIMED" | "NOT_ELIGIBLE" | "COOLDOWN";
 
 export class BonusService {
   constructor(
@@ -37,10 +34,18 @@ export class BonusService {
     return DAILY_BASE + DAILY_STREAK_STEP * (capped - 1);
   }
 
-  dailyStatus(user: UserRecord): { available: boolean; streak: number; nextReward: number } {
+  dailyStatus(user: UserRecord): {
+    available: boolean;
+    streak: number;
+    nextReward: number;
+  } {
     const claimedToday = user.lastDailyClaim === this.todayKey();
     const continuing = user.lastDailyClaim === this.yesterdayKey();
-    const streak = claimedToday ? user.dailyStreak : continuing ? user.dailyStreak + 1 : 1;
+    const streak = claimedToday
+      ? user.dailyStreak
+      : continuing
+        ? user.dailyStreak + 1
+        : 1;
     return {
       available: !claimedToday,
       streak,
@@ -49,12 +54,19 @@ export class BonusService {
   }
 
   /** Claim the daily bonus. Streak continues only if yesterday was claimed. */
-  async claimDaily(user: UserRecord): Promise<{ amount: number; streak: number }> {
+  async claimDaily(
+    user: UserRecord,
+  ): Promise<{ amount: number; streak: number }> {
     if (user.lastDailyClaim === this.todayKey()) {
-      throw new BonusClaimError("ALREADY_CLAIMED", "Daily bonus already claimed today");
+      throw new BonusClaimError(
+        "ALREADY_CLAIMED",
+        "Daily bonus already claimed today",
+      );
     }
     const continuing = user.lastDailyClaim === this.yesterdayKey();
-    const streak = continuing ? Math.min(user.dailyStreak + 1, DAILY_MAX_STREAK) : 1;
+    const streak = continuing
+      ? Math.min(user.dailyStreak + 1, DAILY_MAX_STREAK)
+      : 1;
     const amount = this.dailyRewardFor(streak);
 
     await this.wallet.apply({
@@ -71,25 +83,41 @@ export class BonusService {
     return { amount, streak };
   }
 
-  async refillStatus(user: UserRecord): Promise<{ available: boolean; cooldownEndsAt: string | null }> {
+  async refillStatus(
+    user: UserRecord,
+  ): Promise<{ available: boolean; cooldownEndsAt: string | null }> {
     if ((await this.wallet.getBalance(user.id)) > REFILL_THRESHOLD) {
       return { available: false, cooldownEndsAt: null };
     }
     if (!user.lastRefill) return { available: true, cooldownEndsAt: null };
 
-    const nextAllowed = new Date(user.lastRefill).getTime() + REFILL_COOLDOWN_HOURS * 3600_000;
+    const nextAllowed =
+      new Date(user.lastRefill).getTime() + REFILL_COOLDOWN_HOURS * 3600_000;
     const now = Date.now();
     if (now >= nextAllowed) return { available: true, cooldownEndsAt: null };
-    return { available: false, cooldownEndsAt: new Date(nextAllowed).toISOString() };
+    return {
+      available: false,
+      cooldownEndsAt: new Date(nextAllowed).toISOString(),
+    };
   }
 
   async claimRefill(user: UserRecord): Promise<{ amount: number }> {
     const status = await this.refillStatus(user);
     if (!status.available) {
-      throw new BonusClaimError("NOT_ELIGIBLE", "Refill is not available right now");
+      throw new BonusClaimError(
+        "NOT_ELIGIBLE",
+        "Refill is not available right now",
+      );
     }
-    await this.wallet.apply({ userId: user.id, type: "refill", amount: REFILL_AMOUNT, refType: "refill" });
-    await this.store.updateUser(user.id, { lastRefill: new Date().toISOString() });
+    await this.wallet.apply({
+      userId: user.id,
+      type: "refill",
+      amount: REFILL_AMOUNT,
+      refType: "refill",
+    });
+    await this.store.updateUser(user.id, {
+      lastRefill: new Date().toISOString(),
+    });
     return { amount: REFILL_AMOUNT };
   }
 }

@@ -13,7 +13,8 @@ const buttonVariants = cva(
           "bg-gradient-to-b from-neon-purple to-purple-700 text-white shadow-[0_6px_0_-2px_rgba(88,28,135,0.7)] hover:brightness-110 glow-purple",
         outline:
           "border border-gold-500/40 bg-ink-800/60 text-gold-100 hover:border-gold-400 hover:bg-ink-700/70",
-        ghost: "text-text-secondary hover:bg-ink-700/60 hover:text-text-primary",
+        ghost:
+          "text-text-secondary hover:bg-ink-700/60 hover:text-text-primary",
         danger: "bg-red-600/90 text-white hover:bg-red-500",
       },
       size: {
@@ -28,7 +29,8 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
@@ -37,7 +39,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
     return (
-      <Comp ref={ref} className={cn(buttonVariants({ variant, size }), className)} {...props} />
+      <Comp
+        ref={ref}
+        className={cn(buttonVariants({ variant, size }), className)}
+        {...props}
+      />
     );
   },
 );

@@ -2,7 +2,11 @@
 
 import { cookies } from "next/headers";
 import { z } from "zod";
-import { SESSION_COOKIE, SESSION_MAX_AGE, createSessionToken } from "@/server/auth/session";
+import {
+  SESSION_COOKIE,
+  SESSION_MAX_AGE,
+  createSessionToken,
+} from "@/server/auth/session";
 import { getStore } from "@/server/store";
 import { AuthService, AuthError } from "@/server/services/auth";
 
@@ -27,7 +31,11 @@ function fail(code: string, message: string): ActionResult<never> {
   return { ok: false, error: { code, message } };
 }
 
-async function setSession(userId: string, email: string, role: "player" | "admin") {
+async function setSession(
+  userId: string,
+  email: string,
+  role: "player" | "admin",
+) {
   const token = await createSessionToken({ sub: userId, email, role });
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, token, {
@@ -39,9 +47,15 @@ async function setSession(userId: string, email: string, role: "player" | "admin
   });
 }
 
-export async function registerAction(input: unknown): Promise<ActionResult<{ userId: string }>> {
+export async function registerAction(
+  input: unknown,
+): Promise<ActionResult<{ userId: string }>> {
   const parsed = registerSchema.safeParse(input);
-  if (!parsed.success) return fail("VALIDATION", parsed.error.issues[0]?.message ?? "Invalid input");
+  if (!parsed.success)
+    return fail(
+      "VALIDATION",
+      parsed.error.issues[0]?.message ?? "Invalid input",
+    );
 
   try {
     const service = new AuthService(getStore());
@@ -54,7 +68,9 @@ export async function registerAction(input: unknown): Promise<ActionResult<{ use
   }
 }
 
-export async function loginAction(input: unknown): Promise<ActionResult<{ userId: string }>> {
+export async function loginAction(
+  input: unknown,
+): Promise<ActionResult<{ userId: string }>> {
   const parsed = loginSchema.safeParse(input);
   if (!parsed.success) return fail("VALIDATION", "Invalid input");
 

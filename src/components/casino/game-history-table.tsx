@@ -50,26 +50,42 @@ export function GameHistoryTable({
               const won = round.winTotal > 0;
               const net = round.winTotal - round.betTotal;
               return (
-                <tr key={round.id} className="border-b border-ink-800/60 last:border-0 hover:bg-ink-800/40">
+                <tr
+                  key={round.id}
+                  className="border-b border-ink-800/60 last:border-0 hover:bg-ink-800/40"
+                >
                   <td className="px-4 py-3">
-                    <Link href={gameHref(round.gameId)} className="font-medium text-text-primary hover:text-gold-200">
+                    <Link
+                      href={gameHref(round.gameId)}
+                      className="font-medium text-text-primary hover:text-gold-200"
+                    >
                       {gameTitle(round.gameId)}
                     </Link>
                   </td>
                   {!compact && (
-                    <td className="px-4 py-3 capitalize text-text-muted">{round.kind}</td>
+                    <td className="px-4 py-3 capitalize text-text-muted">
+                      {round.kind}
+                    </td>
                   )}
-                  <td className="px-4 py-3 tabular-nums text-text-secondary">{formatCoins(round.betTotal)}</td>
+                  <td className="px-4 py-3 tabular-nums text-text-secondary">
+                    {formatCoins(round.betTotal)}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <Badge tone={won ? "win" : "lose"}>{won ? "Win" : "Loss"}</Badge>
-                      <span className={`tabular-nums font-semibold ${net >= 0 ? "text-win" : "text-lose"}`}>
+                      <Badge tone={won ? "win" : "lose"}>
+                        {won ? "Win" : "Loss"}
+                      </Badge>
+                      <span
+                        className={`tabular-nums font-semibold ${net >= 0 ? "text-win" : "text-lose"}`}
+                      >
                         {net >= 0 ? "+" : ""}
                         {formatCoins(net)}
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-text-muted">{formatDateTime(round.createdAt)}</td>
+                  <td className="px-4 py-3 text-text-muted">
+                    {formatDateTime(round.createdAt)}
+                  </td>
                 </tr>
               );
             })}

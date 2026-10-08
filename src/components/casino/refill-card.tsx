@@ -44,26 +44,51 @@ export function RefillCard({
     });
   }
 
-  const secondsLeft = cooldownEndsAt ? Math.max(0, Math.floor((new Date(cooldownEndsAt).getTime() - now) / 1000)) : 0;
+  const secondsLeft = cooldownEndsAt
+    ? Math.max(0, Math.floor((new Date(cooldownEndsAt).getTime() - now) / 1000))
+    : 0;
   const canClaim = available && !done;
 
   return (
     <div className="glass relative overflow-hidden rounded-2xl p-5">
-      <div className="absolute -right-4 -bottom-6 text-7xl opacity-10" aria-hidden>🐈</div>
+      <div
+        className="absolute -right-4 -bottom-6 text-7xl opacity-10"
+        aria-hidden
+      >
+        🐈
+      </div>
       <div className="relative">
         <div className="mb-3 flex items-center gap-2">
           <span className="grid h-9 w-9 place-items-center rounded-full bg-neon-purple/20 text-neon-purple">
             <LifeBuoy className="h-5 w-5" />
           </span>
           <div>
-            <h3 className="font-display font-bold text-text-primary">Stray Cat Fund</h3>
-            <p className="text-xs text-text-muted">Low on coins? Grab a top-up on us.</p>
+            <h3 className="font-display font-bold text-text-primary">
+              Stray Cat Fund
+            </h3>
+            <p className="text-xs text-text-muted">
+              Low on coins? Grab a top-up on us.
+            </p>
           </div>
         </div>
         <div className="flex items-center justify-between">
-          <p className="font-display text-xl font-bold text-gold-200">+{formatCoins(1000)}</p>
-          <Button onClick={claim} disabled={pending || !canClaim} variant={canClaim ? "purple" : "outline"}>
-            {done ? "Claimed" : canClaim ? (pending ? "Claiming…" : "Claim") : secondsLeft > 0 ? `Ready in ${Math.ceil(secondsLeft / 60)}m` : "Not eligible"}
+          <p className="font-display text-xl font-bold text-gold-200">
+            +{formatCoins(1000)}
+          </p>
+          <Button
+            onClick={claim}
+            disabled={pending || !canClaim}
+            variant={canClaim ? "purple" : "outline"}
+          >
+            {done
+              ? "Claimed"
+              : canClaim
+                ? pending
+                  ? "Claiming…"
+                  : "Claim"
+                : secondsLeft > 0
+                  ? `Ready in ${Math.ceil(secondsLeft / 60)}m`
+                  : "Not eligible"}
           </Button>
         </div>
         {error && <p className="mt-2 text-sm text-red-300">{error}</p>}

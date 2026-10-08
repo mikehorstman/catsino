@@ -51,8 +51,16 @@ export function RouletteTable({
   onPlace: (bet: PlacedBet) => void;
   disabled?: boolean;
 }) {
-  const straight = (n: number): PlacedBet => ({ type: "straight", selection: [n], amount: chip });
-  const outside = (type: BetType, selection: number[] = []): PlacedBet => ({ type, selection, amount: chip });
+  const straight = (n: number): PlacedBet => ({
+    type: "straight",
+    selection: [n],
+    amount: chip,
+  });
+  const outside = (type: BetType, selection: number[] = []): PlacedBet => ({
+    type,
+    selection,
+    amount: chip,
+  });
 
   const numbers = Array.from({ length: 36 }, (_, i) => i + 1);
 
@@ -104,12 +112,42 @@ export function RouletteTable({
 
           {/* Outside bets */}
           <div className="mt-1 grid grid-cols-6 gap-1">
-            <Cell label="1-18" className="h-10 bg-ink-600" onClick={() => onPlace(outside("low"))} disabled={disabled} />
-            <Cell label="EVEN" className="h-10 bg-ink-600" onClick={() => onPlace(outside("even"))} disabled={disabled} />
-            <Cell label="RED ♦" className="h-10 bg-red-700/80" onClick={() => onPlace(outside("red"))} disabled={disabled} />
-            <Cell label="BLACK ♠" className="h-10 bg-ink-700" onClick={() => onPlace(outside("black"))} disabled={disabled} />
-            <Cell label="ODD" className="h-10 bg-ink-600" onClick={() => onPlace(outside("odd"))} disabled={disabled} />
-            <Cell label="19-36" className="h-10 bg-ink-600" onClick={() => onPlace(outside("high"))} disabled={disabled} />
+            <Cell
+              label="1-18"
+              className="h-10 bg-ink-600"
+              onClick={() => onPlace(outside("low"))}
+              disabled={disabled}
+            />
+            <Cell
+              label="EVEN"
+              className="h-10 bg-ink-600"
+              onClick={() => onPlace(outside("even"))}
+              disabled={disabled}
+            />
+            <Cell
+              label="RED ♦"
+              className="h-10 bg-red-700/80"
+              onClick={() => onPlace(outside("red"))}
+              disabled={disabled}
+            />
+            <Cell
+              label="BLACK ♠"
+              className="h-10 bg-ink-700"
+              onClick={() => onPlace(outside("black"))}
+              disabled={disabled}
+            />
+            <Cell
+              label="ODD"
+              className="h-10 bg-ink-600"
+              onClick={() => onPlace(outside("odd"))}
+              disabled={disabled}
+            />
+            <Cell
+              label="19-36"
+              className="h-10 bg-ink-600"
+              onClick={() => onPlace(outside("high"))}
+              disabled={disabled}
+            />
           </div>
         </div>
       </div>
@@ -118,12 +156,19 @@ export function RouletteTable({
         <div className="mt-3 flex flex-wrap gap-2 border-t border-ink-700 pt-3 text-xs">
           <span className="text-text-muted">On the table:</span>
           {bets.map((b, i) => (
-            <span key={i} className="rounded-full bg-ink-700 px-2 py-0.5 text-gold-200">
-              {b.type} {b.selection.length === 1 ? b.selection[0] : ""} · {b.amount}
+            <span
+              key={i}
+              className="rounded-full bg-ink-700 px-2 py-0.5 text-gold-200"
+            >
+              {b.type} {b.selection.length === 1 ? b.selection[0] : ""} ·{" "}
+              {b.amount}
             </span>
           ))}
           <span className="ml-auto text-text-muted">
-            straight total: {bets.filter((b) => b.type === "straight").reduce((s, b) => s + b.amount, 0)}
+            straight total:{" "}
+            {bets
+              .filter((b) => b.type === "straight")
+              .reduce((s, b) => s + b.amount, 0)}
           </span>
         </div>
       )}

@@ -14,14 +14,24 @@ const spinSchema = z.object({
   idempotencyKey: z.string().uuid(),
 });
 
-export async function spinSlotAction(input: unknown): Promise<ActionResult<unknown>> {
+export async function spinSlotAction(
+  input: unknown,
+): Promise<ActionResult<unknown>> {
   const parsed = spinSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: { code: "VALIDATION", message: "Invalid spin request" } };
+  if (!parsed.success)
+    return {
+      ok: false,
+      error: { code: "VALIDATION", message: "Invalid spin request" },
+    };
 
   const user = await getOrCreateUser();
 
   const config = getSlotConfig(parsed.data.gameId);
-  if (!config) return { ok: false, error: { code: "NOT_FOUND", message: "Game not found" } };
+  if (!config)
+    return {
+      ok: false,
+      error: { code: "NOT_FOUND", message: "Game not found" },
+    };
 
   try {
     const service = new RoundService(getStore());
@@ -34,19 +44,32 @@ export async function spinSlotAction(input: unknown): Promise<ActionResult<unkno
     revalidatePath("/profile");
     return { ok: true, data: response };
   } catch (error) {
-    if (error instanceof RoundError) return { ok: false, error: { code: error.code, message: error.message } };
+    if (error instanceof RoundError)
+      return { ok: false, error: { code: error.code, message: error.message } };
     return { ok: false, error: { code: "UNKNOWN", message: "Spin failed" } };
   }
 }
 
-export async function playFreeSpinAction(input: unknown): Promise<ActionResult<unknown>> {
-  const parsed = z.object({ gameId: z.string().min(1).max(50) }).safeParse(input);
-  if (!parsed.success) return { ok: false, error: { code: "VALIDATION", message: "Invalid request" } };
+export async function playFreeSpinAction(
+  input: unknown,
+): Promise<ActionResult<unknown>> {
+  const parsed = z
+    .object({ gameId: z.string().min(1).max(50) })
+    .safeParse(input);
+  if (!parsed.success)
+    return {
+      ok: false,
+      error: { code: "VALIDATION", message: "Invalid request" },
+    };
 
   const user = await getOrCreateUser();
 
   const config = getSlotConfig(parsed.data.gameId);
-  if (!config) return { ok: false, error: { code: "NOT_FOUND", message: "Game not found" } };
+  if (!config)
+    return {
+      ok: false,
+      error: { code: "NOT_FOUND", message: "Game not found" },
+    };
 
   try {
     const service = new RoundService(getStore());
@@ -54,8 +77,12 @@ export async function playFreeSpinAction(input: unknown): Promise<ActionResult<u
     revalidatePath("/profile");
     return { ok: true, data: response };
   } catch (error) {
-    if (error instanceof RoundError) return { ok: false, error: { code: error.code, message: error.message } };
-    return { ok: false, error: { code: "UNKNOWN", message: "Free spin failed" } };
+    if (error instanceof RoundError)
+      return { ok: false, error: { code: error.code, message: error.message } };
+    return {
+      ok: false,
+      error: { code: "UNKNOWN", message: "Free spin failed" },
+    };
   }
 }
 
@@ -65,14 +92,24 @@ const pickSchema = z.object({
   index: z.number().int().min(0).max(100),
 });
 
-export async function pickBonusAction(input: unknown): Promise<ActionResult<unknown>> {
+export async function pickBonusAction(
+  input: unknown,
+): Promise<ActionResult<unknown>> {
   const parsed = pickSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: { code: "VALIDATION", message: "Invalid pick" } };
+  if (!parsed.success)
+    return {
+      ok: false,
+      error: { code: "VALIDATION", message: "Invalid pick" },
+    };
 
   const user = await getOrCreateUser();
 
   const config = getSlotConfig(parsed.data.gameId);
-  if (!config) return { ok: false, error: { code: "NOT_FOUND", message: "Game not found" } };
+  if (!config)
+    return {
+      ok: false,
+      error: { code: "NOT_FOUND", message: "Game not found" },
+    };
 
   try {
     const service = new RoundService(getStore());
@@ -85,7 +122,8 @@ export async function pickBonusAction(input: unknown): Promise<ActionResult<unkn
     revalidatePath("/profile");
     return { ok: true, data: response };
   } catch (error) {
-    if (error instanceof RoundError) return { ok: false, error: { code: error.code, message: error.message } };
+    if (error instanceof RoundError)
+      return { ok: false, error: { code: error.code, message: error.message } };
     return { ok: false, error: { code: "UNKNOWN", message: "Pick failed" } };
   }
 }

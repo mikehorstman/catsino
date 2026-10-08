@@ -5,7 +5,13 @@ import type { GameMeta } from "@/games/catalog";
 import { cn } from "@/lib/utils";
 
 /** A game tile using a real photo cover, falling back to a gradient. */
-export function GameCard({ game, className }: { game: GameMeta; className?: string }) {
+export function GameCard({
+  game,
+  className,
+}: {
+  game: GameMeta;
+  className?: string;
+}) {
   const live = game.status === "live";
   const cover =
     game.kind === "slots"
@@ -18,11 +24,18 @@ export function GameCard({ game, className }: { game: GameMeta; className?: stri
       aria-disabled={!live}
       className={cn(
         "group relative block overflow-hidden rounded-2xl border border-gold-500/15 bg-ink-800/60 transition-all duration-300",
-        live ? "hover:-translate-y-1 hover:border-gold-500/40 hover:shadow-glow-gold" : "cursor-not-allowed opacity-70",
+        live
+          ? "hover:-translate-y-1 hover:border-gold-500/40 hover:shadow-glow-gold"
+          : "cursor-not-allowed opacity-70",
         className,
       )}
     >
-      <div className={cn("relative aspect-[4/3] overflow-hidden bg-gradient-to-br", game.accent)}>
+      <div
+        className={cn(
+          "relative aspect-[4/3] overflow-hidden bg-gradient-to-br",
+          game.accent,
+        )}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={cover}
@@ -42,8 +55,12 @@ export function GameCard({ game, className }: { game: GameMeta; className?: stri
         )}
       </div>
       <div className="p-4">
-        <h3 className="font-display text-base font-bold text-text-primary">{game.title}</h3>
-        <p className="mt-1 line-clamp-2 text-sm text-text-muted">{game.tagline}</p>
+        <h3 className="font-display text-base font-bold text-text-primary">
+          {game.title}
+        </h3>
+        <p className="mt-1 line-clamp-2 text-sm text-text-muted">
+          {game.tagline}
+        </p>
       </div>
     </Link>
   );

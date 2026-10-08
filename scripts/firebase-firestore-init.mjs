@@ -12,7 +12,10 @@ const CLIENT_ID =
 const CLIENT_SECRET = "j9iVZfS8kkCEFUPaAeJV0sAi";
 
 const cfg = JSON.parse(
-  readFileSync(join(homedir(), ".config/configstore/firebase-tools.json"), "utf8"),
+  readFileSync(
+    join(homedir(), ".config/configstore/firebase-tools.json"),
+    "utf8",
+  ),
 );
 
 const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
@@ -66,5 +69,9 @@ const create = await api(
   },
 );
 if (create.ok) console.log("✓ Firestore (default) database created in eur3");
-else if (create.status === 409) console.log("✓ Firestore database already exists");
-else console.log(`! Create returned ${create.status}: ${JSON.stringify(create.json)}`);
+else if (create.status === 409)
+  console.log("✓ Firestore database already exists");
+else
+  console.log(
+    `! Create returned ${create.status}: ${JSON.stringify(create.json)}`,
+  );

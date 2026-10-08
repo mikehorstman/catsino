@@ -1,7 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { createSeededRng } from "@/engine/rng/seeded";
 import { spinRoulette } from "@/engine/roulette/engine";
-import { payoutForBet, validateBetShape, WHEEL_ORDER, isRed, isBlack } from "@/engine/roulette/bets";
+import {
+  payoutForBet,
+  validateBetShape,
+  WHEEL_ORDER,
+  isRed,
+  isBlack,
+} from "@/engine/roulette/bets";
 import type { Bet } from "@/engine/roulette/types";
 
 describe("roulette payouts", () => {
@@ -9,7 +15,14 @@ describe("roulette payouts", () => {
     expect(payoutForBet("straight", 100)).toBe(3600);
   });
   it("pays outside bets at even money (2x return)", () => {
-    for (const type of ["red", "black", "odd", "even", "low", "high"] as const) {
+    for (const type of [
+      "red",
+      "black",
+      "odd",
+      "even",
+      "low",
+      "high",
+    ] as const) {
       expect(payoutForBet(type, 100)).toBe(200);
     }
   });
@@ -50,7 +63,11 @@ describe("validateBetShape", () => {
 describe("spinRoulette", () => {
   it("resolves a straight-up win correctly", () => {
     // Deterministic rng that always returns the chosen number via int()
-    const rng = { int: () => 17, float: () => 0, pick: <T,>(a: readonly T[]) => a[0] };
+    const rng = {
+      int: () => 17,
+      float: () => 0,
+      pick: <T>(a: readonly T[]) => a[0],
+    };
     const bets: Bet[] = [
       { type: "straight", selection: [17], amount: 100 },
       { type: "straight", selection: [18], amount: 100 },

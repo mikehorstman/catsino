@@ -31,6 +31,8 @@ test.describe("Catsino smoke", () => {
 
   test("shows the landing page to anonymous visitors", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("link", { name: /claim 10,000 free coins/i })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /claim 10,000 free coins/i }),
+    ).toBeVisible();
   });
 });

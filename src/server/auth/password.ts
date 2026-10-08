@@ -9,7 +9,10 @@ export async function hashPassword(password: string): Promise<string> {
   });
 }
 
-export async function verifyPassword(passwordHash: string, password: string): Promise<boolean> {
+export async function verifyPassword(
+  passwordHash: string,
+  password: string,
+): Promise<boolean> {
   try {
     return await verify(passwordHash, password);
   } catch {

@@ -51,5 +51,9 @@ export function AnimatedNumber({
     };
   }, [value, durationMs]);
 
-  return <span className={cn("tabular-nums", className)}>{formatCoins(display)}</span>;
+  return (
+    <span className={cn("tabular-nums", className)}>
+      {formatCoins(display)}
+    </span>
+  );
 }

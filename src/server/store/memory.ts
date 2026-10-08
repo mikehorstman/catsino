@@ -60,7 +60,10 @@ export class MemoryStore implements Store {
     this.file = file;
     if (file && existsSync(file)) {
       try {
-        this.data = { ...emptyData(), ...JSON.parse(readFileSync(file, "utf8")) };
+        this.data = {
+          ...emptyData(),
+          ...JSON.parse(readFileSync(file, "utf8")),
+        };
       } catch {
         this.data = emptyData();
       }
@@ -98,7 +101,9 @@ export class MemoryStore implements Store {
     return this.data.wallets.find((w) => w.userId === userId);
   }
   async putWallet(wallet: WalletRecord) {
-    const index = this.data.wallets.findIndex((w) => w.userId === wallet.userId);
+    const index = this.data.wallets.findIndex(
+      (w) => w.userId === wallet.userId,
+    );
     if (index === -1) this.data.wallets.push(wallet);
     else this.data.wallets[index] = wallet;
     this.scheduleSave();
@@ -118,7 +123,15 @@ export class MemoryStore implements Store {
     this.data.rounds.push(round);
     this.scheduleSave();
   }
-  async listRounds(userId: string, opts: { limit?: number; offset?: number; kind?: string; result?: "win" | "loss" } = {}) {
+  async listRounds(
+    userId: string,
+    opts: {
+      limit?: number;
+      offset?: number;
+      kind?: string;
+      result?: "win" | "loss";
+    } = {},
+  ) {
     let rows = this.data.rounds.filter((r) => r.userId === userId);
     if (opts.kind) rows = rows.filter((r) => r.kind === opts.kind);
     if (opts.result === "win") rows = rows.filter((r) => r.winTotal > 0);
@@ -141,7 +154,9 @@ export class MemoryStore implements Store {
   }
 
   async getIdempotency(key: string, userId: string) {
-    return this.data.idempotency.find((r) => r.key === key && r.userId === userId);
+    return this.data.idempotency.find(
+      (r) => r.key === key && r.userId === userId,
+    );
   }
   async putIdempotency(record: IdempotencyRecord) {
     this.data.idempotency.push(record);
@@ -157,7 +172,8 @@ export class MemoryStore implements Store {
   }
   async getActiveBonusGame(userId: string, gameId: string) {
     return this.data.bonusGames.find(
-      (g) => g.userId === userId && g.gameId === gameId && g.status === "active",
+      (g) =>
+        g.userId === userId && g.gameId === gameId && g.status === "active",
     );
   }
   async updateBonusGame(id: string, patch: Partial<BonusGameRecord>) {

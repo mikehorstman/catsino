@@ -10,8 +10,19 @@ import type { ActionResult } from "./auth";
 
 const betSchema = z.object({
   type: z.enum([
-    "straight", "split", "street", "corner", "line",
-    "dozen", "column", "red", "black", "odd", "even", "low", "high",
+    "straight",
+    "split",
+    "street",
+    "corner",
+    "line",
+    "dozen",
+    "column",
+    "red",
+    "black",
+    "odd",
+    "even",
+    "low",
+    "high",
   ]),
   selection: z.array(z.number().int().min(0).max(36)).max(36),
   amount: z.number().int().positive(),
@@ -22,9 +33,15 @@ const rouletteSchema = z.object({
   idempotencyKey: z.string().uuid(),
 });
 
-export async function spinRouletteAction(input: unknown): Promise<ActionResult<unknown>> {
+export async function spinRouletteAction(
+  input: unknown,
+): Promise<ActionResult<unknown>> {
   const parsed = rouletteSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: { code: "VALIDATION", message: "Invalid bets" } };
+  if (!parsed.success)
+    return {
+      ok: false,
+      error: { code: "VALIDATION", message: "Invalid bets" },
+    };
 
   const user = await getOrCreateUser();
 
@@ -38,38 +55,51 @@ export async function spinRouletteAction(input: unknown): Promise<ActionResult<u
     revalidatePath("/profile");
     return { ok: true, data: response };
   } catch (error) {
-    if (error instanceof RoundError) return { ok: false, error: { code: error.code, message: error.message } };
+    if (error instanceof RoundError)
+      return { ok: false, error: { code: error.code, message: error.message } };
     return { ok: false, error: { code: "UNKNOWN", message: "Spin failed" } };
   }
 }
 
-export async function claimDailyBonusAction(): Promise<ActionResult<{ amount: number; streak: number }>> {
+export async function claimDailyBonusAction(): Promise<
+  ActionResult<{ amount: number; streak: number }>
+> {
   const user = await getOrCreateUser();
 
   try {
     const store = getStore();
-    const service = new BonusService(store, new RoundService(store).getWalletService());
+    const service = new BonusService(
+      store,
+      new RoundService(store).getWalletService(),
+    );
     const result = await service.claimDaily(user);
     revalidatePath("/bonuses");
     revalidatePath("/");
     return { ok: true, data: result };
   } catch (error) {
-    if (error instanceof BonusClaimError) return { ok: false, error: { code: error.code, message: error.message } };
+    if (error instanceof BonusClaimError)
+      return { ok: false, error: { code: error.code, message: error.message } };
     return { ok: false, error: { code: "UNKNOWN", message: "Claim failed" } };
   }
 }
 
-export async function claimRefillAction(): Promise<ActionResult<{ amount: number }>> {
+export async function claimRefillAction(): Promise<
+  ActionResult<{ amount: number }>
+> {
   const user = await getOrCreateUser();
 
   try {
     const store = getStore();
-    const service = new BonusService(store, new RoundService(store).getWalletService());
+    const service = new BonusService(
+      store,
+      new RoundService(store).getWalletService(),
+    );
     const result = await service.claimRefill(user);
     revalidatePath("/bonuses");
     return { ok: true, data: result };
   } catch (error) {
-    if (error instanceof BonusClaimError) return { ok: false, error: { code: error.code, message: error.message } };
+    if (error instanceof BonusClaimError)
+      return { ok: false, error: { code: error.code, message: error.message } };
     return { ok: false, error: { code: "UNKNOWN", message: "Claim failed" } };
   }
 }

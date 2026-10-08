@@ -38,10 +38,16 @@ export class WalletService {
     if (!wallet) throw new WalletError("NO_WALLET", "Wallet not found");
 
     const balanceAfter = wallet.balance + input.amount;
-    if (balanceAfter < 0) throw new WalletError("INSUFFICIENT_FUNDS", "Insufficient balance");
-    if (!Number.isInteger(input.amount)) throw new WalletError("INVALID_AMOUNT", "Amount must be an integer");
+    if (balanceAfter < 0)
+      throw new WalletError("INSUFFICIENT_FUNDS", "Insufficient balance");
+    if (!Number.isInteger(input.amount))
+      throw new WalletError("INVALID_AMOUNT", "Amount must be an integer");
 
-    await this.store.putWallet({ ...wallet, balance: balanceAfter, version: wallet.version + 1 });
+    await this.store.putWallet({
+      ...wallet,
+      balance: balanceAfter,
+      version: wallet.version + 1,
+    });
 
     const tx: TransactionRecord = {
       id: newId(),
@@ -62,21 +68,50 @@ export class WalletService {
    * A round: debit the bet and credit any winnings atomically. Either both
    * entries land or neither does (the debit is validated first).
    */
-  async settleRound(userId: string, bet: number, credit: number, refId: string): Promise<TransactionRecord[]> {
+  async settleRound(
+    userId: string,
+    bet: number,
+    credit: number,
+    refId: string,
+  ): Promise<TransactionRecord[]> {
     const wallet = await this.store.getWallet(userId);
     if (!wallet) throw new WalletError("NO_WALLET", "Wallet not found");
-    if (wallet.balance < bet) throw new WalletError("INSUFFICIENT_FUNDS", "Insufficient balance");
+    if (wallet.balance < bet)
+      throw new WalletError("INSUFFICIENT_FUNDS", "Insufficient balance");
 
     const out: TransactionRecord[] = [];
-    if (bet > 0) out.push(await this.apply({ userId, type: "bet", amount: -bet, refType: "round", refId }));
-    if (credit > 0) out.push(await this.apply({ userId, type: "win", amount: credit, refType: "round", refId }));
+    if (bet > 0)
+      out.push(
+        await this.apply({
+          userId,
+          type: "bet",
+          amount: -bet,
+          refType: "round",
+          refId,
+        }),
+      );
+    if (credit > 0)
+      out.push(
+        await this.apply({
+          userId,
+          type: "win",
+          amount: credit,
+          refType: "round",
+          refId,
+        }),
+      );
     return out;
   }
 
   /** Recompute the cached balance from the ledger — used by the integrity job. */
-  async verify(userId: string): Promise<{ cached: number; ledger: number; ok: boolean }> {
+  async verify(
+    userId: string,
+  ): Promise<{ cached: number; ledger: number; ok: boolean }> {
     const cached = await this.getBalance(userId);
-    const ledger = (await this.store.listTransactions(userId)).reduce((sum, tx) => sum + tx.amount, 0);
+    const ledger = (await this.store.listTransactions(userId)).reduce(
+      (sum, tx) => sum + tx.amount,
+      0,
+    );
     return { cached, ledger, ok: cached === ledger };
   }
 }

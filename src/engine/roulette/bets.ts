@@ -31,8 +31,8 @@ const COVERAGE: Record<BetType, number> = {
 
 /** European wheel order, for the wheel animation. */
 export const WHEEL_ORDER = [
-  0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10,
-  5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26,
+  0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24,
+  16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26,
 ];
 
 /**
@@ -48,7 +48,8 @@ export function betWins(bet: Bet, winningNumber: number): boolean {
   if (bet.type === "red") return isRed(winningNumber);
   if (bet.type === "black") return isBlack(winningNumber);
   if (bet.type === "odd") return winningNumber !== 0 && winningNumber % 2 === 1;
-  if (bet.type === "even") return winningNumber !== 0 && winningNumber % 2 === 0;
+  if (bet.type === "even")
+    return winningNumber !== 0 && winningNumber % 2 === 0;
   if (bet.type === "low") return winningNumber >= 1 && winningNumber <= 18;
   if (bet.type === "high") return winningNumber >= 19 && winningNumber <= 36;
   return bet.selection.includes(winningNumber);
@@ -58,10 +59,17 @@ export function betWins(bet: Bet, winningNumber: number): boolean {
 export function validateBetShape(bet: Bet): string | null {
   const expected = COVERAGE[bet.type];
   if (!expected) return `unknown bet type: ${bet.type}`;
-  if (bet.amount <= 0 || !Number.isInteger(bet.amount)) return "bet amount must be a positive integer";
+  if (bet.amount <= 0 || !Number.isInteger(bet.amount))
+    return "bet amount must be a positive integer";
 
-  if (bet.type === "red" || bet.type === "black" || bet.type === "odd" ||
-      bet.type === "even" || bet.type === "low" || bet.type === "high") {
+  if (
+    bet.type === "red" ||
+    bet.type === "black" ||
+    bet.type === "odd" ||
+    bet.type === "even" ||
+    bet.type === "low" ||
+    bet.type === "high"
+  ) {
     return null; // outcome-only bets; selection is ignored
   }
 
