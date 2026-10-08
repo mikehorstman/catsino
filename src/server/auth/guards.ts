@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { getStore } from "@/server/store/memory";
+import { getStore } from "@/server/store";
 import type { UserRecord } from "@/server/store/types";
 import { AuthService } from "@/server/services/auth";
 import { SESSION_COOKIE, SESSION_MAX_AGE, createSessionToken, verifySessionToken } from "./session";
@@ -15,7 +15,7 @@ export async function getCurrentUser(): Promise<UserRecord | null> {
   const payload = await verifySessionToken(token);
   if (!payload) return null;
 
-  return getStore().getUserById(payload.sub) ?? null;
+  return (await getStore().getUserById(payload.sub)) ?? null;
 }
 
 /**
@@ -36,7 +36,7 @@ export async function getOrCreateUser(): Promise<UserRecord> {
   const guestId = cookieStore.get(GUEST_COOKIE)?.value;
 
   if (guestId) {
-    const known = store.getUserById(guestId);
+    const known = await store.getUserById(guestId);
     if (known) return known;
   }
 

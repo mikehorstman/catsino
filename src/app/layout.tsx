@@ -4,7 +4,7 @@ import "./globals.css";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { getOrCreateUser } from "@/server/auth/guards";
-import { getStore } from "@/server/store/memory";
+import { getStore } from "@/server/store";
 import { WalletService } from "@/server/store/wallet";
 
 const display = Cinzel({
@@ -19,7 +19,9 @@ const sans = Outfit({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3100"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3100",
+  ),
   title: {
     default: "Catsino — Play the Cat Casino",
     template: "%s · Catsino",
@@ -36,17 +38,26 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   // Auto-provisions a guest so the app is playable without signing in.
   const user = await getOrCreateUser();
-  const balance = new WalletService(getStore()).getBalance(user.id);
-  const jackpotPool = getStore().getJackpot().pool;
+  const store = getStore();
+  const balance = await new WalletService(store).getBalance(user.id);
+  const jackpotPool = (await store.getJackpot()).pool;
 
   return (
     <html lang="en" className={`${display.variable} ${sans.variable} h-full`}>
       <body className="flex min-h-full flex-col antialiased">
         <SiteHeader
-          user={{ displayName: user.displayName, level: user.level, isGuest: Boolean(user.isGuest) }}
+          user={{
+            displayName: user.displayName,
+            level: user.level,
+            isGuest: Boolean(user.isGuest),
+          }}
           balance={balance}
           jackpotPool={jackpotPool}
         />
@@ -56,4 +67,3 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     </html>
   );
 }
-

@@ -8,7 +8,7 @@ import { DailyBonusCard } from "@/components/casino/daily-bonus-card";
 import { RefillCard } from "@/components/casino/refill-card";
 import { JackpotTicker } from "@/components/casino/jackpot-ticker";
 import { getOrCreateUser } from "@/server/auth/guards";
-import { getStore } from "@/server/store/memory";
+import { getStore } from "@/server/store";
 import { WalletService } from "@/server/store/wallet";
 import { BonusService } from "@/server/services/bonus";
 import { ACHIEVEMENTS } from "@/games/achievements";
@@ -27,9 +27,9 @@ export default async function BonusesPage() {
   const wallet = new WalletService(store);
   const bonus = new BonusService(store, wallet);
   const daily = bonus.dailyStatus(user);
-  const refill = bonus.refillStatus(user);
+  const refill = await bonus.refillStatus(user);
   const earned = user.achievements.length;
-  const jackpot = store.getJackpot();
+  const jackpot = await store.getJackpot();
 
   return (
     <PageShell>

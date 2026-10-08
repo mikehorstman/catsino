@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GameHistoryTable } from "@/components/casino/game-history-table";
 import { getOrCreateUser } from "@/server/auth/guards";
-import { getStore } from "@/server/store/memory";
+import { getStore } from "@/server/store";
 import { WalletService } from "@/server/store/wallet";
 import { levelDef, xpToNextLevel } from "@/games/progression";
 import { formatCoins } from "@/lib/utils";
@@ -19,14 +19,14 @@ export default async function ProfilePage() {
 
   const store = getStore();
   const wallet = new WalletService(store);
-  const balance = wallet.getBalance(user.id);
+  const balance = await wallet.getBalance(user.id);
   const def = levelDef(user.level);
   const nextXp = xpToNextLevel(user.level);
   const currentLevelFloor = def.xpRequired;
   const progress = nextXp > 0 ? Math.min(100, ((user.xp - currentLevelFloor) / nextXp) * 100) : 100;
   const winRate = user.totalRounds > 0 ? (user.totalWins / user.totalRounds) * 100 : 0;
   const net = user.totalWon - user.totalWagered;
-  const recent = store.listRounds(user.id, { limit: 10 });
+  const recent = await store.listRounds(user.id, { limit: 10 });
 
   return (
     <PageShell>

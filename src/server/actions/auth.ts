@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { SESSION_COOKIE, SESSION_MAX_AGE, createSessionToken } from "@/server/auth/session";
-import { getStore } from "@/server/store/memory";
+import { getStore } from "@/server/store";
 import { AuthService, AuthError } from "@/server/services/auth";
 
 const registerSchema = z.object({

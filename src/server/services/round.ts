@@ -5,7 +5,7 @@ import type { PickBonusResult, PickCell, SlotConfig, SpinState } from "@/engine/
 import { spinRoulette } from "@/engine/roulette/engine";
 import type { Bet, RouletteResult } from "@/engine/roulette/types";
 import type { Store, RoundRecord, UserRecord } from "@/server/store/types";
-import { newId } from "@/server/store/memory";
+import { newId } from "@/server/store";
 import { WalletError, WalletService } from "@/server/store/wallet";
 import { withLock } from "@/server/store/mutex";
 import { ProgressionService, type RoundOutcome } from "./progression";
@@ -60,15 +60,15 @@ export class RoundService {
     this.progression = new ProgressionService(store, this.wallet);
   }
 
-  private replay<T>(userId: string, idempotencyKey?: string): T | undefined {
+  private async replay<T>(userId: string, idempotencyKey?: string): Promise<T | undefined> {
     if (!idempotencyKey) return undefined;
-    const prior = this.store.getIdempotency(idempotencyKey, userId);
+    const prior = await this.store.getIdempotency(idempotencyKey, userId);
     return prior ? (prior.response as T) : undefined;
   }
 
-  private remember(userId: string, key: string | undefined, roundId: string, response: unknown) {
+  private async remember(userId: string, key: string | undefined, roundId: string, response: unknown) {
     if (!key) return;
-    this.store.putIdempotency({
+    await this.store.putIdempotency({
       key,
       userId,
       roundId,
@@ -86,18 +86,18 @@ export class RoundService {
   }): Promise<SlotRoundResponse> {
     const { user, config, bet, idempotencyKey } = opts;
 
-    const replay = this.replay<SlotRoundResponse>(user.id, idempotencyKey);
+    const replay = await this.replay<SlotRoundResponse>(user.id, idempotencyKey);
     if (replay) return replay;
 
     if (!config.betLevels.includes(bet)) {
       throw new RoundError("INVALID_BET", "Bet is not an allowed level");
     }
 
-    return withLock(`wallet:${user.id}`, () => {
+    return withLock(`wallet:${user.id}`, async () => {
       const isFreeSpin = (opts.freeSpinState?.freeSpinsRemaining ?? 0) > 0;
       const charge = isFreeSpin ? 0 : bet;
 
-      if (this.wallet.getBalance(user.id) < charge) {
+      if ((await this.wallet.getBalance(user.id)) < charge) {
         throw new RoundError("INSUFFICIENT_FUNDS", "Not enough coins for this bet");
       }
 
@@ -105,13 +105,13 @@ export class RoundService {
       const roundId = newId();
 
       try {
-        this.wallet.settleRound(user.id, charge, result.totalWin, roundId);
+        await this.wallet.settleRound(user.id, charge, result.totalWin, roundId);
       } catch (error) {
         if (error instanceof WalletError) throw new RoundError(error.code, error.message);
         throw error;
       }
 
-      this.recordRound({
+      await this.recordRound({
         id: roundId,
         userId: user.id,
         gameId: config.id,
@@ -131,7 +131,7 @@ export class RoundService {
       if (result.pickBonusAwarded && pickFeature?.type === "pickBonus") {
         const board = generatePickBoard(pickFeature, this.rng);
         const bonusId = newId();
-        this.store.createBonusGame({
+        await this.store.createBonusGame({
           id: bonusId,
           userId: user.id,
           gameId: config.id,
@@ -155,9 +155,9 @@ export class RoundService {
       } else if (result.nextState.freeSpinsRemaining > 0) {
         // Only create a free-spins game when starting fresh; a retrigger during
         // free spins keeps the existing game and just tops up the count.
-        const existing = this.store.getActiveBonusGame(user.id, config.id);
+        const existing = await this.store.getActiveBonusGame(user.id, config.id);
         if (existing && existing.kind === "free-spins") {
-          this.store.updateBonusGame(existing.id, {
+          await this.store.updateBonusGame(existing.id, {
             freeSpinsRemaining: result.nextState.freeSpinsRemaining,
             freeSpinsMultiplier: result.nextState.freeSpinsMultiplier,
             updatedAt: new Date().toISOString(),
@@ -170,7 +170,7 @@ export class RoundService {
           };
         } else if (!isFreeSpin && freeFeature?.type === "freeSpins") {
           const bonusId = newId();
-          this.store.createBonusGame({
+          await this.store.createBonusGame({
             id: bonusId,
             userId: user.id,
             gameId: config.id,
@@ -192,8 +192,8 @@ export class RoundService {
         }
       }
 
-      const fresh = this.store.getUserById(user.id)!;
-      const progression = this.progression.applyRoundResult(fresh, {
+      const fresh = (await this.store.getUserById(user.id))!;
+      const progression = await this.progression.applyRoundResult(fresh, {
         bet: charge,
         win: result.totalWin,
         isSpin: true,
@@ -203,21 +203,21 @@ export class RoundService {
       const jackpotService = new JackpotService(this.store, this.rng);
       let jackpot: JackpotWin | null = null;
       if (charge > 0) {
-        jackpotService.contribute(charge);
-        jackpot = jackpotService.roll(user.id, user.displayName, charge);
+        await jackpotService.contribute(charge);
+        jackpot = await jackpotService.roll(user.id, user.displayName, charge);
       }
 
       const response: SlotRoundResponse = {
         kind: "slots",
         roundId,
-        balance: this.wallet.getBalance(user.id),
+        balance: await this.wallet.getBalance(user.id),
         result,
         progression,
         bonus,
         jackpot,
-        jackpotPool: jackpotService.getPool(),
+        jackpotPool: await jackpotService.getPool(),
       };
-      this.remember(user.id, idempotencyKey, roundId, response);
+      await this.remember(user.id, idempotencyKey, roundId, response);
       return response;
     });
   }
@@ -229,14 +229,14 @@ export class RoundService {
   }): Promise<RouletteRoundResponse> {
     const { user, bets, idempotencyKey } = opts;
 
-    const replay = this.replay<RouletteRoundResponse>(user.id, idempotencyKey);
+    const replay = await this.replay<RouletteRoundResponse>(user.id, idempotencyKey);
     if (replay) return replay;
 
     if (bets.length === 0) throw new RoundError("INVALID_BET", "Place at least one bet");
     const totalBet = bets.reduce((sum, b) => sum + b.amount, 0);
 
-    return withLock(`wallet:${user.id}`, () => {
-      if (this.wallet.getBalance(user.id) < totalBet) {
+    return withLock(`wallet:${user.id}`, async () => {
+      if ((await this.wallet.getBalance(user.id)) < totalBet) {
         throw new RoundError("INSUFFICIENT_FUNDS", "Not enough coins for these bets");
       }
 
@@ -249,13 +249,13 @@ export class RoundService {
 
       const roundId = newId();
       try {
-        this.wallet.settleRound(user.id, totalBet, result.totalPayout, roundId);
+        await this.wallet.settleRound(user.id, totalBet, result.totalPayout, roundId);
       } catch (error) {
         if (error instanceof WalletError) throw new RoundError(error.code, error.message);
         throw error;
       }
 
-      this.recordRound({
+      await this.recordRound({
         id: roundId,
         userId: user.id,
         gameId: "roulette",
@@ -267,8 +267,8 @@ export class RoundService {
         configVersion: 1,
       });
 
-      const fresh = this.store.getUserById(user.id)!;
-      const progression = this.progression.applyRoundResult(fresh, {
+      const fresh = (await this.store.getUserById(user.id))!;
+      const progression = await this.progression.applyRoundResult(fresh, {
         bet: totalBet,
         win: result.totalPayout,
         isSpin: false,
@@ -277,26 +277,26 @@ export class RoundService {
       const response: RouletteRoundResponse = {
         kind: "roulette",
         roundId,
-        balance: this.wallet.getBalance(user.id),
+        balance: await this.wallet.getBalance(user.id),
         result,
         progression,
       };
-      this.remember(user.id, idempotencyKey, roundId, response);
+      await this.remember(user.id, idempotencyKey, roundId, response);
       return response;
     });
   }
 
-  private recordRound(round: RoundRecord) {
-    this.store.createRound(round);
+  private async recordRound(round: RoundRecord) {
+    await this.store.createRound(round);
   }
 
   /**
    * Resolve the state of a slot for a player: an active bonus game (blocking
    * regular spins) or an in-progress free-spin round.
    */
-  getSlotState(user: UserRecord, config: SlotConfig): SlotState {
+  async getSlotState(user: UserRecord, config: SlotConfig): Promise<SlotState> {
     const pickFeature = config.features.find((f) => f.type === "pickBonus");
-    const bonus = this.store.getActiveBonusGame(user.id, config.id);
+    const bonus = await this.store.getActiveBonusGame(user.id, config.id);
     if (bonus && bonus.kind === "bonus-game") {
       const board = bonus.board as GeneratedBoard;
       const chosen = bonus.chosen ?? [];
@@ -329,8 +329,8 @@ export class RoundService {
   async playFreeSpin(opts: { user: UserRecord; config: SlotConfig }): Promise<SlotRoundResponse> {
     const { user, config } = opts;
 
-    return withLock(`wallet:${user.id}`, () => {
-      const game = this.store.getActiveBonusGame(user.id, config.id);
+    return withLock(`wallet:${user.id}`, async () => {
+      const game = await this.store.getActiveBonusGame(user.id, config.id);
       if (!game || game.kind !== "free-spins" || (game.freeSpinsRemaining ?? 0) <= 0) {
         throw new RoundError("NO_FREE_SPINS", "No free spins remaining");
       }
@@ -342,8 +342,8 @@ export class RoundService {
       const result = spinSlot(config, game.bet, this.rng, state);
       const roundId = newId();
 
-      this.wallet.settleRound(user.id, 0, result.totalWin, roundId);
-      this.recordRound({
+      await this.wallet.settleRound(user.id, 0, result.totalWin, roundId);
+      await this.recordRound({
         id: roundId,
         userId: user.id,
         gameId: config.id,
@@ -356,14 +356,14 @@ export class RoundService {
       });
 
       if (result.nextState.freeSpinsRemaining <= 0) {
-        this.store.updateBonusGame(game.id, {
+        await this.store.updateBonusGame(game.id, {
           status: "complete",
           freeSpinsRemaining: 0,
           accumulatedWin: (game.accumulatedWin ?? 0) + result.totalWin,
           updatedAt: new Date().toISOString(),
         });
       } else {
-        this.store.updateBonusGame(game.id, {
+        await this.store.updateBonusGame(game.id, {
           freeSpinsRemaining: result.nextState.freeSpinsRemaining,
           freeSpinsMultiplier: result.nextState.freeSpinsMultiplier,
           accumulatedWin: (game.accumulatedWin ?? 0) + result.totalWin,
@@ -371,8 +371,8 @@ export class RoundService {
         });
       }
 
-      const fresh = this.store.getUserById(user.id)!;
-      const progression = this.progression.applyRoundResult(fresh, {
+      const fresh = (await this.store.getUserById(user.id))!;
+      const progression = await this.progression.applyRoundResult(fresh, {
         bet: 0,
         win: result.totalWin,
         isSpin: true,
@@ -381,25 +381,25 @@ export class RoundService {
       return {
         kind: "slots" as const,
         roundId,
-        balance: this.wallet.getBalance(user.id),
+        balance: await this.wallet.getBalance(user.id),
         result,
         progression,
         bonus: null,
         jackpot: null,
-        jackpotPool: new JackpotService(this.store, this.rng).getPool(),
+        jackpotPool: await new JackpotService(this.store, this.rng).getPool(),
       };
     });
   }
 
   /** Reveal one pick-bonus cell. Pure lookup against the stored board. */
-  pickBonusCell(opts: {
+  async pickBonusCell(opts: {
     user: UserRecord;
     config: SlotConfig;
     gameId: string;
     index: number;
-  }): PickResponse {
+  }): Promise<PickResponse> {
     const { user, config, gameId, index } = opts;
-    const game = this.store.getBonusGame(gameId);
+    const game = await this.store.getBonusGame(gameId);
     if (!game || game.userId !== user.id || game.gameId !== config.id) {
       throw new RoundError("NOT_FOUND", "Bonus game not found");
     }
@@ -415,14 +415,14 @@ export class RoundService {
     const complete = nextChosen.length >= picks;
 
     let result: PickBonusResult | null = null;
-    let balance = this.wallet.getBalance(user.id);
+    let balance = await this.wallet.getBalance(user.id);
     let progression: RoundOutcome | null = null;
 
     if (complete) {
       result = settlePickBonus(board, nextChosen, game.bet);
       const roundId = newId();
-      this.wallet.settleRound(user.id, 0, result.win, roundId);
-      this.recordRound({
+      await this.wallet.settleRound(user.id, 0, result.win, roundId);
+      await this.recordRound({
         id: roundId,
         userId: user.id,
         gameId: config.id,
@@ -433,17 +433,17 @@ export class RoundService {
         configVersion: config.version,
         createdAt: new Date().toISOString(),
       });
-      const fresh = this.store.getUserById(user.id)!;
-      progression = this.progression.applyRoundResult(fresh, { bet: 0, win: result.win, isSpin: false });
-      balance = this.wallet.getBalance(user.id);
-      this.store.updateBonusGame(game.id, {
+      const fresh = (await this.store.getUserById(user.id))!;
+      progression = await this.progression.applyRoundResult(fresh, { bet: 0, win: result.win, isSpin: false });
+      balance = await this.wallet.getBalance(user.id);
+      await this.store.updateBonusGame(game.id, {
         status: "complete",
         chosen: nextChosen,
         accumulatedWin: result.win,
         updatedAt: new Date().toISOString(),
       });
     } else {
-      this.store.updateBonusGame(game.id, { chosen: nextChosen, updatedAt: new Date().toISOString() });
+      await this.store.updateBonusGame(game.id, { chosen: nextChosen, updatedAt: new Date().toISOString() });
     }
 
     return {

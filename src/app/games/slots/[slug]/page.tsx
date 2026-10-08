@@ -7,7 +7,7 @@ import { getSlotConfig } from "@/games/slots/registry";
 import { getGameMeta } from "@/games/catalog";
 import { getSlotTheme } from "@/games/slots/themes";
 import { getOrCreateUser } from "@/server/auth/guards";
-import { getStore } from "@/server/store/memory";
+import { getStore } from "@/server/store";
 import { WalletService } from "@/server/store/wallet";
 import { RoundService } from "@/server/services/round";
 
@@ -38,11 +38,12 @@ export default async function SlotPage({ params }: { params: Promise<{ slug: str
   if (!config) notFound();
 
   const user = await getOrCreateUser();
-  const balance = new WalletService(getStore()).getBalance(user.id);
+  const store = getStore();
+  const balance = await new WalletService(store).getBalance(user.id);
   const theme = getSlotTheme(slug);
   const meta = getGameMeta(slug);
-  const initialState = new RoundService(getStore()).getSlotState(user, config);
-  const jackpotPool = getStore().getJackpot().pool;
+  const initialState = await new RoundService(store).getSlotState(user, config);
+  const jackpotPool = (await store.getJackpot()).pool;
 
   return (
     <PageShell>

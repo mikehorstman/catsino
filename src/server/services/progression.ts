@@ -1,6 +1,6 @@
 import { ACHIEVEMENTS, type AchievementStats } from "@/games/achievements";
 import { resolveLevelUp, xpForBet } from "@/games/progression";
-import { newId } from "@/server/store/memory";
+import { newId } from "@/server/store";
 import type { Store, UserRecord } from "@/server/store/types";
 import { WalletService } from "@/server/store/wallet";
 
@@ -33,7 +33,7 @@ export class ProgressionService {
     };
   }
 
-  private grantAchievements(user: UserRecord): { id: string; title: string; reward: number }[] {
+  private async grantAchievements(user: UserRecord): Promise<{ id: string; title: string; reward: number }[]> {
     const stats = this.stats(user);
     const unlocked: { id: string; title: string; reward: number }[] = [];
 
@@ -41,7 +41,7 @@ export class ProgressionService {
       if (user.achievements.includes(def.id)) continue;
       if (!def.check(stats)) continue;
 
-      this.wallet.apply({
+      await this.wallet.apply({
         userId: user.id,
         type: "achievement",
         amount: def.reward,
@@ -55,10 +55,10 @@ export class ProgressionService {
   }
 
   /** Apply the results of a finished round to the player's progression. */
-  applyRoundResult(
+  async applyRoundResult(
     user: UserRecord,
     opts: { bet: number; win: number; isSpin: boolean },
-  ): RoundOutcome {
+  ): Promise<RoundOutcome> {
     const gainedXp = xpForBet(opts.bet);
     const { newLevel, rewards, levelsGained } = resolveLevelUp(user.xp, gainedXp);
 
@@ -72,11 +72,11 @@ export class ProgressionService {
       totalWagered: user.totalWagered + opts.bet,
       totalWon: user.totalWon + opts.win,
     };
-    this.store.updateUser(user.id, patch);
+    await this.store.updateUser(user.id, patch);
     const updated = { ...user, ...patch } as UserRecord;
 
     if (rewards > 0) {
-      this.wallet.apply({
+      await this.wallet.apply({
         userId: user.id,
         type: "level-reward",
         amount: rewards,
@@ -85,7 +85,7 @@ export class ProgressionService {
       });
     }
 
-    const unlockedAchievements = this.grantAchievements(updated);
+    const unlockedAchievements = await this.grantAchievements(updated);
 
     return {
       gainedXp,

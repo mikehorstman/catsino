@@ -5,7 +5,7 @@ import { PageShell } from "@/components/layout/page-shell";
 import { SectionHeading } from "@/components/casino/section-heading";
 import { GameHistoryTable } from "@/components/casino/game-history-table";
 import { getOrCreateUser } from "@/server/auth/guards";
-import { getStore } from "@/server/store/memory";
+import { getStore } from "@/server/store";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Game history" };
@@ -39,8 +39,8 @@ export default async function HistoryPage({
   if (filter === "slots" || filter === "roulette") opts.kind = filter;
   if (filter === "win" || filter === "loss") opts.result = filter;
 
-  const rounds = store.listRounds(user.id, opts);
-  const total = store.countRounds(user.id);
+  const rounds = await store.listRounds(user.id, opts);
+  const total = await store.countRounds(user.id);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   function href(next: Partial<{ filter: string; page: number }>) {

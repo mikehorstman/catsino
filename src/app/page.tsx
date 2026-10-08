@@ -9,7 +9,7 @@ import { JackpotTicker } from "@/components/casino/jackpot-ticker";
 import { LiveWinsFeed } from "@/components/casino/live-wins-feed";
 import { GAMES } from "@/games/catalog";
 import { getOrCreateUser } from "@/server/auth/guards";
-import { getStore } from "@/server/store/memory";
+import { getStore } from "@/server/store";
 import { BonusService } from "@/server/services/bonus";
 import { WalletService } from "@/server/store/wallet";
 
@@ -19,8 +19,8 @@ export default async function HomePage() {
   const liveGames = GAMES.filter((g) => g.status === "live");
   const slots = liveGames.filter((g) => g.kind === "slots");
   const daily = new BonusService(store, new WalletService(store)).dailyStatus(user);
-  const jackpotPool = store.getJackpot().pool;
-  const recentWins = store.listAllRounds({ limit: 40 });
+  const jackpotPool = (await store.getJackpot()).pool;
+  const recentWins = await store.listAllRounds({ limit: 40 });
 
   return (
     <PageShell>

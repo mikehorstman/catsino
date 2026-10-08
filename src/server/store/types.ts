@@ -119,32 +119,35 @@ export interface BonusGameRecord {
   updatedAt: string;
 }
 
+/**
+ * The persistence contract. Every method is async so the same interface works
+ * for the in-memory store, the JSON-file store and Firestore alike.
+ */
 export interface Store {
-  getUserById(id: string): UserRecord | undefined;
-  getUserByEmail(email: string): UserRecord | undefined;
-  createUser(user: UserRecord): void;
-  updateUser(id: string, patch: Partial<UserRecord>): void;
+  getUserById(id: string): Promise<UserRecord | undefined>;
+  getUserByEmail(email: string): Promise<UserRecord | undefined>;
+  createUser(user: UserRecord): Promise<void>;
+  updateUser(id: string, patch: Partial<UserRecord>): Promise<void>;
 
-  getWallet(userId: string): WalletRecord | undefined;
-  putWallet(wallet: WalletRecord): void;
+  getWallet(userId: string): Promise<WalletRecord | undefined>;
+  putWallet(wallet: WalletRecord): Promise<void>;
 
-  appendTransaction(tx: TransactionRecord): void;
-  listTransactions(userId: string): TransactionRecord[];
+  appendTransaction(tx: TransactionRecord): Promise<void>;
+  listTransactions(userId: string): Promise<TransactionRecord[]>;
 
+  getJackpot(): Promise<JackpotRecord>;
+  putJackpot(jackpot: JackpotRecord): Promise<void>;
+  createRound(round: RoundRecord): Promise<void>;
+  listRounds(userId: string, opts?: { limit?: number; offset?: number; kind?: string; result?: "win" | "loss" }): Promise<RoundRecord[]>;
+  countRounds(userId: string): Promise<number>;
+  listAllRounds(opts?: { limit?: number }): Promise<RoundRecord[]>;
+  listAllUsers(): Promise<UserRecord[]>;
 
-  getJackpot(): JackpotRecord;
-  putJackpot(jackpot: JackpotRecord): void;
-  createRound(round: RoundRecord): void;
-  listRounds(userId: string, opts?: { limit?: number; offset?: number; kind?: string; result?: "win" | "loss" }): RoundRecord[];
-  countRounds(userId: string): number;
-  listAllRounds(opts?: { limit?: number }): RoundRecord[];
-  listAllUsers(): UserRecord[];
+  getIdempotency(key: string, userId: string): Promise<IdempotencyRecord | undefined>;
+  putIdempotency(record: IdempotencyRecord): Promise<void>;
 
-  getIdempotency(key: string, userId: string): IdempotencyRecord | undefined;
-  putIdempotency(record: IdempotencyRecord): void;
-
-  createBonusGame(game: BonusGameRecord): void;
-  getBonusGame(id: string): BonusGameRecord | undefined;
-  getActiveBonusGame(userId: string, gameId: string): BonusGameRecord | undefined;
-  updateBonusGame(id: string, patch: Partial<BonusGameRecord>): void;
+  createBonusGame(game: BonusGameRecord): Promise<void>;
+  getBonusGame(id: string): Promise<BonusGameRecord | undefined>;
+  getActiveBonusGame(userId: string, gameId: string): Promise<BonusGameRecord | undefined>;
+  updateBonusGame(id: string, patch: Partial<BonusGameRecord>): Promise<void>;
 }

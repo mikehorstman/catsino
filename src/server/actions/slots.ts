@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getSlotConfig } from "@/games/slots/registry";
 import { getOrCreateUser } from "@/server/auth/guards";
-import { getStore } from "@/server/store/memory";
+import { getStore } from "@/server/store";
 import { RoundError, RoundService } from "@/server/services/round";
 import type { ActionResult } from "./auth";
 
@@ -76,7 +76,7 @@ export async function pickBonusAction(input: unknown): Promise<ActionResult<unkn
 
   try {
     const service = new RoundService(getStore());
-    const response = service.pickBonusCell({
+    const response = await service.pickBonusCell({
       user,
       config,
       gameId: parsed.data.bonusId,

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PageShell } from "@/components/layout/page-shell";
 import { RouletteClient } from "./roulette-client";
 import { getOrCreateUser } from "@/server/auth/guards";
-import { getStore } from "@/server/store/memory";
+import { getStore } from "@/server/store";
 import { WalletService } from "@/server/store/wallet";
 
 export const metadata: Metadata = {
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default async function RoulettePage() {
   const user = await getOrCreateUser();
-  const balance = new WalletService(getStore()).getBalance(user.id);
+  const balance = await new WalletService(getStore()).getBalance(user.id);
 
   return (
     <PageShell>

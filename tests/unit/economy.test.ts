@@ -56,100 +56,100 @@ describe("progression", () => {
 });
 
 describe("WalletService", () => {
-  function setup() {
+  async function setup() {
     const store = createMemoryStore();
     const wallet = new WalletService(store);
-    store.createUser(makeUser());
-    store.putWallet({ userId: "u1", balance: 0, version: 0 });
+    await store.createUser(makeUser());
+    await store.putWallet({ userId: "u1", balance: 0, version: 0 });
     // Seed the starting balance through the ledger so `verify` stays consistent.
-    wallet.apply({ userId: "u1", type: "welcome", amount: 1000, refType: "test" });
+    await wallet.apply({ userId: "u1", type: "welcome", amount: 1000, refType: "test" });
     return { store, wallet };
   }
 
-  it("credits and records a ledger entry", () => {
-    const { wallet, store } = setup();
-    wallet.apply({ userId: "u1", type: "daily-bonus", amount: 500 });
-    expect(wallet.getBalance("u1")).toBe(1500);
-    const bonusEntries = store.listTransactions("u1").filter((t) => t.type === "daily-bonus");
+  it("credits and records a ledger entry", async () => {
+    const { wallet, store } = await setup();
+    await wallet.apply({ userId: "u1", type: "daily-bonus", amount: 500 });
+    expect(await wallet.getBalance("u1")).toBe(1500);
+    const bonusEntries = (await store.listTransactions("u1")).filter((t) => t.type === "daily-bonus");
     expect(bonusEntries).toHaveLength(1);
   });
 
-  it("throws on insufficient funds and does not mutate", () => {
-    const { wallet } = setup();
-    expect(() => wallet.apply({ userId: "u1", type: "bet", amount: -2000 })).toThrow(WalletError);
-    expect(wallet.getBalance("u1")).toBe(1000);
+  it("throws on insufficient funds and does not mutate", async () => {
+    const { wallet } = await setup();
+    await expect(wallet.apply({ userId: "u1", type: "bet", amount: -2000 })).rejects.toThrow(WalletError);
+    expect(await wallet.getBalance("u1")).toBe(1000);
   });
 
-  it("rejects non-integer amounts", () => {
-    const { wallet } = setup();
-    expect(() => wallet.apply({ userId: "u1", type: "win", amount: 10.5 })).toThrow(WalletError);
+  it("rejects non-integer amounts", async () => {
+    const { wallet } = await setup();
+    await expect(wallet.apply({ userId: "u1", type: "win", amount: 10.5 })).rejects.toThrow(WalletError);
   });
 
-  it("keeps cached balance equal to the ledger", () => {
-    const { wallet } = setup();
-    wallet.settleRound("u1", 100, 250, "r1");
-    const check = wallet.verify("u1");
+  it("keeps cached balance equal to the ledger", async () => {
+    const { wallet } = await setup();
+    await wallet.settleRound("u1", 100, 250, "r1");
+    const check = await wallet.verify("u1");
     expect(check.ok).toBe(true);
     expect(check.cached).toBe(1150);
   });
 
-  it("rolls back the debit when the bet is unaffordable in settleRound", () => {
-    const { wallet } = setup();
-    expect(() => wallet.settleRound("u1", 5000, 0, "r0")).toThrow(WalletError);
-    expect(wallet.getBalance("u1")).toBe(1000);
+  it("rolls back the debit when the bet is unaffordable in settleRound", async () => {
+    const { wallet } = await setup();
+    await expect(wallet.settleRound("u1", 5000, 0, "r0")).rejects.toThrow(WalletError);
+    expect(await wallet.getBalance("u1")).toBe(1000);
   });
 });
 
 describe("BonusService", () => {
-  function setup(user: Partial<UserRecord> = {}) {
+  async function setup(user: Partial<UserRecord> = {}) {
     const store = createMemoryStore();
     const wallet = new WalletService(store);
     const bonus = new BonusService(store, wallet);
     const u = makeUser(user);
-    store.createUser(u);
-    store.putWallet({ userId: u.id, balance: 100, version: 0 });
+    await store.createUser(u);
+    await store.putWallet({ userId: u.id, balance: 100, version: 0 });
     return { store, wallet, bonus, user: u };
   }
 
-  it("grants the daily bonus and starts a streak", () => {
-    const { bonus, user, wallet } = setup();
-    const result = bonus.claimDaily(user);
+  it("grants the daily bonus and starts a streak", async () => {
+    const { bonus, user, wallet } = await setup();
+    const result = await bonus.claimDaily(user);
     expect(result.streak).toBe(1);
     expect(result.amount).toBe(500);
-    expect(wallet.getBalance(user.id)).toBe(600);
+    expect(await wallet.getBalance(user.id)).toBe(600);
   });
 
-  it("prevents double claiming on the same day", () => {
-    const first = setup();
-    first.bonus.claimDaily(first.user);
-    const updated = first.store.getUserById(first.user.id)!;
-    expect(() => first.bonus.claimDaily(updated)).toThrow();
+  it("prevents double claiming on the same day", async () => {
+    const first = await setup();
+    await first.bonus.claimDaily(first.user);
+    const updated = (await first.store.getUserById(first.user.id))!;
+    await expect(first.bonus.claimDaily(updated)).rejects.toThrow();
   });
 
-  it("continues the streak when claimed yesterday", () => {
+  it("continues the streak when claimed yesterday", async () => {
     const yesterday = new Date();
     yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-    const { bonus, user } = setup({
+    const { bonus, user } = await setup({
       lastDailyClaim: yesterday.toISOString().slice(0, 10),
       dailyStreak: 3,
     });
-    const result = bonus.claimDaily(user);
+    const result = await bonus.claimDaily(user);
     expect(result.streak).toBe(4);
     expect(result.amount).toBe(800);
   });
 
-  it("resets the streak when a day was missed", () => {
-    const { bonus, user } = setup({ lastDailyClaim: "2020-01-01", dailyStreak: 5 });
-    const result = bonus.claimDaily(user);
+  it("resets the streak when a day was missed", async () => {
+    const { bonus, user } = await setup({ lastDailyClaim: "2020-01-01", dailyStreak: 5 });
+    const result = await bonus.claimDaily(user);
     expect(result.streak).toBe(1);
   });
 
-  it("only refills when the balance is low", () => {
-    const { bonus, user, wallet } = setup();
+  it("only refills when the balance is low", async () => {
+    const { bonus, user, wallet } = await setup();
     // Balance is 100, above the refill threshold of 10.
-    expect(bonus.refillStatus(user).available).toBe(false);
+    expect((await bonus.refillStatus(user)).available).toBe(false);
     // Drain the wallet below the threshold and it becomes available.
-    wallet.settleRound(user.id, 95, 0, "drain");
-    expect(bonus.refillStatus(user).available).toBe(true);
+    await wallet.settleRound(user.id, 95, 0, "drain");
+    expect((await bonus.refillStatus(user)).available).toBe(true);
   });
 });

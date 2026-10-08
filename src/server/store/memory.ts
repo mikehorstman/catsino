@@ -51,7 +51,7 @@ function emptyData(): Data {
  *
  * The global singleton survives Next.js hot reloads in development.
  */
-class MemoryStore implements Store {
+export class MemoryStore implements Store {
   private data: Data = emptyData();
   private readonly file: string | null;
   private saveTimer: NodeJS.Timeout | null = null;
@@ -76,49 +76,49 @@ class MemoryStore implements Store {
     }, 250);
   }
 
-  getUserById(id: string) {
+  async getUserById(id: string) {
     return this.data.users.find((u) => u.id === id);
   }
-  getUserByEmail(email: string) {
+  async getUserByEmail(email: string) {
     const normalised = email.trim().toLowerCase();
     return this.data.users.find((u) => u.email === normalised);
   }
-  createUser(user: UserRecord) {
+  async createUser(user: UserRecord) {
     this.data.users.push(user);
     this.scheduleSave();
   }
-  updateUser(id: string, patch: Partial<UserRecord>) {
+  async updateUser(id: string, patch: Partial<UserRecord>) {
     const index = this.data.users.findIndex((u) => u.id === id);
     if (index === -1) return;
     this.data.users[index] = { ...this.data.users[index], ...patch };
     this.scheduleSave();
   }
 
-  getWallet(userId: string) {
+  async getWallet(userId: string) {
     return this.data.wallets.find((w) => w.userId === userId);
   }
-  putWallet(wallet: WalletRecord) {
+  async putWallet(wallet: WalletRecord) {
     const index = this.data.wallets.findIndex((w) => w.userId === wallet.userId);
     if (index === -1) this.data.wallets.push(wallet);
     else this.data.wallets[index] = wallet;
     this.scheduleSave();
   }
 
-  appendTransaction(tx: TransactionRecord) {
+  async appendTransaction(tx: TransactionRecord) {
     this.data.transactions.push(tx);
     this.scheduleSave();
   }
-  listTransactions(userId: string) {
+  async listTransactions(userId: string) {
     return this.data.transactions
       .filter((t) => t.userId === userId)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
-  createRound(round: RoundRecord) {
+  async createRound(round: RoundRecord) {
     this.data.rounds.push(round);
     this.scheduleSave();
   }
-  listRounds(userId: string, opts: { limit?: number; offset?: number; kind?: string; result?: "win" | "loss" } = {}) {
+  async listRounds(userId: string, opts: { limit?: number; offset?: number; kind?: string; result?: "win" | "loss" } = {}) {
     let rows = this.data.rounds.filter((r) => r.userId === userId);
     if (opts.kind) rows = rows.filter((r) => r.kind === opts.kind);
     if (opts.result === "win") rows = rows.filter((r) => r.winTotal > 0);
@@ -128,48 +128,49 @@ class MemoryStore implements Store {
     const limit = opts.limit ?? 25;
     return rows.slice(offset, offset + limit);
   }
-  countRounds(userId: string) {
+  async countRounds(userId: string) {
     return this.data.rounds.filter((r) => r.userId === userId).length;
   }
-  listAllRounds(opts: { limit?: number } = {}) {
+  async listAllRounds(opts: { limit?: number } = {}) {
     return [...this.data.rounds]
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, opts.limit ?? 100);
   }
-  listAllUsers() {
+  async listAllUsers() {
     return [...this.data.users];
   }
 
-  getIdempotency(key: string, userId: string) {
+  async getIdempotency(key: string, userId: string) {
     return this.data.idempotency.find((r) => r.key === key && r.userId === userId);
   }
-  putIdempotency(record: IdempotencyRecord) {
+  async putIdempotency(record: IdempotencyRecord) {
     this.data.idempotency.push(record);
     this.scheduleSave();
   }
-createBonusGame(game: BonusGameRecord) {
+
+  async createBonusGame(game: BonusGameRecord) {
     this.data.bonusGames.push(game);
     this.scheduleSave();
   }
-  getBonusGame(id: string) {
+  async getBonusGame(id: string) {
     return this.data.bonusGames.find((g) => g.id === id);
   }
-  getActiveBonusGame(userId: string, gameId: string) {
+  async getActiveBonusGame(userId: string, gameId: string) {
     return this.data.bonusGames.find(
       (g) => g.userId === userId && g.gameId === gameId && g.status === "active",
     );
   }
-  updateBonusGame(id: string, patch: Partial<BonusGameRecord>) {
+  async updateBonusGame(id: string, patch: Partial<BonusGameRecord>) {
     const index = this.data.bonusGames.findIndex((g) => g.id === id);
     if (index === -1) return;
     this.data.bonusGames[index] = { ...this.data.bonusGames[index], ...patch };
     this.scheduleSave();
   }
 
-  getJackpot() {
+  async getJackpot() {
     return this.data.jackpot;
   }
-  putJackpot(jackpot: JackpotRecord) {
+  async putJackpot(jackpot: JackpotRecord) {
     this.data.jackpot = jackpot;
     this.scheduleSave();
   }
@@ -178,24 +179,6 @@ createBonusGame(game: BonusGameRecord) {
   reset() {
     this.data = emptyData();
   }
-}
-
-declare global {
-  // eslint-disable-next-line no-var
-  var __catsinoStore: MemoryStore | undefined;
-}
-
-function resolveFile(): string | null {
-  if (process.env.PERSIST !== "file") return null;
-  return process.env.CATSINO_DATA_FILE ?? `${process.cwd()}/data/catsino.json`;
-}
-
-/** Singleton accessor. */
-export function getStore(): Store {
-  if (!globalThis.__catsinoStore) {
-    globalThis.__catsinoStore = new MemoryStore(resolveFile());
-  }
-  return globalThis.__catsinoStore;
 }
 
 /** Test helper: fresh in-memory store with no persistence. */

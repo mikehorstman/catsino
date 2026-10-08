@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getOrCreateUser } from "@/server/auth/guards";
-import { getStore } from "@/server/store/memory";
+import { getStore } from "@/server/store";
 import { RoundError, RoundService } from "@/server/services/round";
 import { BonusClaimError, BonusService } from "@/server/services/bonus";
 import type { ActionResult } from "./auth";
@@ -49,7 +49,7 @@ export async function claimDailyBonusAction(): Promise<ActionResult<{ amount: nu
   try {
     const store = getStore();
     const service = new BonusService(store, new RoundService(store).getWalletService());
-    const result = service.claimDaily(user);
+    const result = await service.claimDaily(user);
     revalidatePath("/bonuses");
     revalidatePath("/");
     return { ok: true, data: result };
@@ -65,7 +65,7 @@ export async function claimRefillAction(): Promise<ActionResult<{ amount: number
   try {
     const store = getStore();
     const service = new BonusService(store, new RoundService(store).getWalletService());
-    const result = service.claimRefill(user);
+    const result = await service.claimRefill(user);
     revalidatePath("/bonuses");
     return { ok: true, data: result };
   } catch (error) {

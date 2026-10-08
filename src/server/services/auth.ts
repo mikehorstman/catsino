@@ -1,5 +1,6 @@
 import { hashPassword, verifyPassword } from "@/server/auth/password";
-import { newId } from "@/server/store/memory";
+import { newId } from "@/server/store";
+import { withLock } from "@/server/store/mutex";
 import type { Store, UserRecord } from "@/server/store/types";
 import { WalletService } from "@/server/store/wallet";
 import { WELCOME_BONUS } from "./bonus";
@@ -20,7 +21,7 @@ export class AuthService {
 
   async register(input: { email: string; displayName: string; password: string }): Promise<UserRecord> {
     const email = input.email.trim().toLowerCase();
-    if (this.store.getUserByEmail(email)) {
+    if (await this.store.getUserByEmail(email)) {
       throw new AuthError("EMAIL_TAKEN", "That email is already registered");
     }
 
@@ -44,11 +45,11 @@ export class AuthService {
       lastRefill: null,
       achievements: [],
     };
-    this.store.createUser(user);
-    this.store.putWallet({ userId: user.id, balance: 0, version: 0 });
+    await this.store.createUser(user);
+    await this.store.putWallet({ userId: user.id, balance: 0, version: 0 });
 
     // Welcome bonus credited through the ledger.
-    this.wallet.apply({
+    await this.wallet.apply({
       userId: user.id,
       type: "welcome",
       amount: WELCOME_BONUS,
@@ -63,7 +64,7 @@ export class AuthService {
    * immediately, and the guest can register later to keep their progress.
    * Pass `id` to reuse the stable id from the guest cookie.
    */
-  createGuest(id?: string): UserRecord {
+  async createGuest(id?: string): Promise<UserRecord> {
     const userId = id ?? newId();
     const user: UserRecord = {
       id: userId,
@@ -86,19 +87,27 @@ export class AuthService {
       lastRefill: null,
       achievements: [],
     };
-    this.store.createUser(user);
-    this.store.putWallet({ userId: user.id, balance: 0, version: 0 });
-    this.wallet.apply({
-      userId: user.id,
-      type: "welcome",
-      amount: WELCOME_BONUS,
-      refType: "guest",
+    // Serialise provisioning per id: concurrent requests (e.g. layout + page
+    // rendering in parallel) must not both create the guest and double-credit
+    // the welcome bonus.
+    return withLock(`guest:${userId}`, async () => {
+      const existing = await this.store.getUserById(userId);
+      if (existing) return existing;
+
+      await this.store.createUser(user);
+      await this.store.putWallet({ userId: user.id, balance: 0, version: 0 });
+      await this.wallet.apply({
+        userId: user.id,
+        type: "welcome",
+        amount: WELCOME_BONUS,
+        refType: "guest",
+      });
+      return user;
     });
-    return user;
   }
 
   async login(email: string, password: string): Promise<UserRecord> {
-    const user = this.store.getUserByEmail(email);
+    const user = await this.store.getUserByEmail(email);
     if (!user) throw new AuthError("INVALID_CREDENTIALS", "Invalid email or password");
     const ok = await verifyPassword(user.passwordHash, password);
     if (!ok) throw new AuthError("INVALID_CREDENTIALS", "Invalid email or password");

@@ -36,12 +36,14 @@ export class SlotReels {
   }[] = [];
   private overlay = new Graphics();
   private started = false;
+  private destroyed = false;
   private cellW = 90;
   private cellH = 90;
   private cols: number;
   private rows: number;
   private tickerFn?: (t: Ticker) => void;
   private textures = new Map<string, Texture>();
+  private gsapRef?: typeof import("gsap").default;
 
   constructor(
     private config: SlotConfig,
@@ -172,12 +174,15 @@ export class SlotReels {
 
   /** Position tiles for a given pixel offset, wrapping around the strip. */
   private setColumnOffset(container: Container, tiles: Container[], strip: string[], offset: number) {
+    if (this.destroyed) return;
     const L = strip.length;
     const wrapped = ((offset % (L * this.cellH)) + L * this.cellH) % (L * this.cellH);
     const shift = Math.floor(wrapped / this.cellH);
     const frac = wrapped - shift * this.cellH;
     for (let i = 0; i < L; i += 1) {
       const tile = tiles[i];
+      // A resize/destroy can null out tiles mid-tween; skip safely.
+      if (!tile || tile.destroyed) continue;
       const idx = (i - shift + L * 2) % L;
       tile.y = idx * this.cellH - frac;
       // Hide tiles far outside the window for performance.
@@ -218,6 +223,7 @@ export class SlotReels {
    */
   async reveal(result: SpinResult): Promise<void> {
     const gsap = (await import("gsap")).default;
+    this.gsapRef = gsap;
 
     await Promise.all(
       this.reels.map(
@@ -293,8 +299,12 @@ export class SlotReels {
   destroy() {
     // Guard: React StrictMode can unmount before `init()` finishes.
     if (!this.started) return;
+    this.destroyed = true;
     try {
       if (this.tickerFn) this.app.ticker.remove(this.tickerFn);
+      // Stop any in-flight reveal tweens so their onUpdate cannot touch
+      // destroyed tiles after teardown.
+      for (const reel of this.reels) this.gsapRef?.killTweensOf(reel);
       this.app.destroy({ removeView: true }, { children: true });
     } catch {
       // Already torn down.

@@ -13,7 +13,8 @@ export function createSecureRng(): Rng {
     },
     float() {
       // randomInt gives unbiased integers; scale 2^48 to a [0,1) float.
-      const RANGE = 2 ** 48;
+      // randomInt's upper bound is exclusive and max-min must be <= 2^48-1.
+      const RANGE = 2 ** 48 - 1;
       return randomInt(0, RANGE) / RANGE;
     },
     pick(items) {

@@ -49,7 +49,7 @@ export class BonusService {
   }
 
   /** Claim the daily bonus. Streak continues only if yesterday was claimed. */
-  claimDaily(user: UserRecord): { amount: number; streak: number } {
+  async claimDaily(user: UserRecord): Promise<{ amount: number; streak: number }> {
     if (user.lastDailyClaim === this.todayKey()) {
       throw new BonusClaimError("ALREADY_CLAIMED", "Daily bonus already claimed today");
     }
@@ -57,22 +57,22 @@ export class BonusService {
     const streak = continuing ? Math.min(user.dailyStreak + 1, DAILY_MAX_STREAK) : 1;
     const amount = this.dailyRewardFor(streak);
 
-    this.wallet.apply({
+    await this.wallet.apply({
       userId: user.id,
       type: "daily-bonus",
       amount,
       refType: "bonus",
       refId: this.todayKey(),
     });
-    this.store.updateUser(user.id, {
+    await this.store.updateUser(user.id, {
       dailyStreak: streak,
       lastDailyClaim: this.todayKey(),
     });
     return { amount, streak };
   }
 
-  refillStatus(user: UserRecord): { available: boolean; cooldownEndsAt: string | null } {
-    if (this.wallet.getBalance(user.id) > REFILL_THRESHOLD) {
+  async refillStatus(user: UserRecord): Promise<{ available: boolean; cooldownEndsAt: string | null }> {
+    if ((await this.wallet.getBalance(user.id)) > REFILL_THRESHOLD) {
       return { available: false, cooldownEndsAt: null };
     }
     if (!user.lastRefill) return { available: true, cooldownEndsAt: null };
@@ -83,13 +83,13 @@ export class BonusService {
     return { available: false, cooldownEndsAt: new Date(nextAllowed).toISOString() };
   }
 
-  claimRefill(user: UserRecord): { amount: number } {
-    const status = this.refillStatus(user);
+  async claimRefill(user: UserRecord): Promise<{ amount: number }> {
+    const status = await this.refillStatus(user);
     if (!status.available) {
       throw new BonusClaimError("NOT_ELIGIBLE", "Refill is not available right now");
     }
-    this.wallet.apply({ userId: user.id, type: "refill", amount: REFILL_AMOUNT, refType: "refill" });
-    this.store.updateUser(user.id, { lastRefill: new Date().toISOString() });
+    await this.wallet.apply({ userId: user.id, type: "refill", amount: REFILL_AMOUNT, refType: "refill" });
+    await this.store.updateUser(user.id, { lastRefill: new Date().toISOString() });
     return { amount: REFILL_AMOUNT };
   }
 }
