@@ -1,9 +1,8 @@
 import type { SlotConfig } from "@/engine/slots/types";
-import { getSlotTheme } from "@/games/slots/themes";
+import { symbolImage } from "@/games/slots/themes";
 
 /** Static paytable, shown alongside every slot. */
 export function Paytable({ config }: { config: SlotConfig }) {
-  const theme = getSlotTheme(config.id);
   const rows = config.symbols.slice().sort((a, b) => a.weight - b.weight);
 
   return (
@@ -18,9 +17,14 @@ export function Paytable({ config }: { config: SlotConfig }) {
           return (
             <div key={symbol.id} className="flex items-center justify-between text-sm">
               <span className="flex items-center gap-2">
-                <span className="text-xl" aria-hidden>
-                  {theme.symbolEmoji[symbol.id] ?? "🐱"}
-                </span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={symbolImage(config.id, symbol.id)}
+                  alt=""
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 rounded-lg object-cover ring-1 ring-gold-500/30"
+                />
                 <span className="text-text-secondary capitalize">
                   {symbol.id.replace(/-/g, " ")}
                   {symbol.kind !== "regular" && (

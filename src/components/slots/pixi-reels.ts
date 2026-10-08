@@ -1,14 +1,17 @@
 import {
   Application,
+  Assets,
   BlurFilter,
   Container,
   Graphics,
+  Sprite,
   Text,
+  Texture,
   type Ticker,
 } from "pixi.js";
 import type { SlotConfig, SpinResult } from "@/engine/slots/types";
 import { buildStrip } from "@/engine/slots/engine";
-import type { SlotTheme } from "@/games/slots/themes";
+import { symbolImage, type SlotTheme } from "@/games/slots/themes";
 
 /**
  * PixiJS reel scene.
@@ -16,6 +19,9 @@ import type { SlotTheme } from "@/games/slots/themes";
  * Owns all per-frame animation so React never re-renders during a spin. The
  * scene is driven entirely by a server `SpinResult`: the client only animates
  * the outcome it was given, it never decides the outcome.
+ *
+ * Symbols render as real cat photos loaded into textures; the emoji in the
+ * theme are only a fallback if a texture fails to load.
  */
 export class SlotReels {
   private app = new Application();
@@ -35,6 +41,7 @@ export class SlotReels {
   private cols: number;
   private rows: number;
   private tickerFn?: (t: Ticker) => void;
+  private textures = new Map<string, Texture>();
 
   constructor(
     private config: SlotConfig,
@@ -44,10 +51,27 @@ export class SlotReels {
     this.rows = config.rows;
   }
 
+  /** Preload every symbol photo into a texture. */
+  private async loadTextures() {
+    const ids = this.config.symbols.map((s) => s.id);
+    await Promise.all(
+      ids.map(async (id) => {
+        try {
+          const texture = await Assets.load<Texture>(symbolImage(this.config.id, id));
+          this.textures.set(id, texture);
+        } catch {
+          // Missing photo — the emoji fallback covers it.
+        }
+      }),
+    );
+  }
+
   async init(host: HTMLElement) {
     const width = Math.max(280, host.clientWidth);
     this.cellW = Math.floor(width / this.cols);
     this.cellH = Math.floor(this.cellW * 0.95);
+
+    await this.loadTextures();
 
     await this.app.init({
       width: this.cellW * this.cols,
@@ -67,25 +91,48 @@ export class SlotReels {
 
   private tile(symbolId: string): Container {
     const cell = new Container();
-    const bg = new Graphics();
     const radius = Math.round(this.cellW * 0.16);
-    const pad = Math.round(this.cellW * 0.07);
-    bg.roundRect(pad, pad, this.cellW - pad * 2, this.cellH - pad * 2, radius)
-      .fill({ color: 0x10101a, alpha: 0.85 })
-      .stroke({ width: 2, color: 0x2a2a38 });
-    cell.addChild(bg);
+    const pad = Math.round(this.cellW * 0.06);
+    const w = this.cellW - pad * 2;
+    const h = this.cellH - pad * 2;
 
-    const emoji = new Text({
-      text: this.theme.symbolEmoji[symbolId] ?? "🐱",
-      style: {
-        fontSize: Math.round(this.cellH * 0.5),
-        align: "center",
-      },
-    });
-    emoji.anchor.set(0.5);
-    emoji.x = this.cellW / 2;
-    emoji.y = this.cellH / 2;
-    cell.addChild(emoji);
+    const texture = this.textures.get(symbolId);
+    if (texture) {
+      // Photo symbol: cover the rounded tile.
+      const sprite = new Sprite(texture);
+      const scale = Math.max(w / texture.width, h / texture.height);
+      sprite.scale.set(scale);
+      sprite.anchor.set(0.5);
+      sprite.position.set(this.cellW / 2, this.cellH / 2);
+
+      const mask = new Graphics().roundRect(pad, pad, w, h, radius).fill(0xffffff);
+      sprite.mask = mask;
+      cell.addChild(mask, sprite);
+
+      // Gold rim on wild/scatter symbols so they read as special.
+      const symbol = this.config.symbols.find((s) => s.id === symbolId);
+      const rimColour =
+        symbol?.kind === "wild" ? 0xf0d27a : symbol?.kind === "scatter" ? 0xec4899 : 0x2a2a38;
+      const rim = new Graphics()
+        .roundRect(pad, pad, w, h, radius)
+        .stroke({ width: symbol?.kind === "regular" ? 2 : 3, color: rimColour, alpha: symbol?.kind === "regular" ? 0.6 : 1 });
+      cell.addChild(rim);
+    } else {
+      // Fallback tile with emoji.
+      const bg = new Graphics();
+      bg.roundRect(pad, pad, w, h, radius)
+        .fill({ color: 0x10101a, alpha: 0.9 })
+        .stroke({ width: 2, color: 0x2a2a38 });
+      cell.addChild(bg);
+      const emoji = new Text({
+        text: this.theme.symbolEmoji[symbolId] ?? "🐱",
+        style: { fontSize: Math.round(this.cellH * 0.5), align: "center" },
+      });
+      emoji.anchor.set(0.5);
+      emoji.position.set(this.cellW / 2, this.cellH / 2);
+      cell.addChild(emoji);
+    }
+
     return cell;
   }
 

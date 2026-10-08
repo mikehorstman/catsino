@@ -26,7 +26,27 @@ export interface FreeSpinsFeature {
   multiplier: number;
 }
 
-export type SlotFeature = FreeSpinsFeature;
+export interface PickBonusFeature {
+  type: "pickBonus";
+  /** Scatter-style symbol that triggers the bonus. */
+  triggerSymbol: string;
+  triggerCount: number;
+  /** Grid dimensions of the pick board. */
+  rows: number;
+  cols: number;
+  /** How many cells the player may reveal. */
+  picks: number;
+  /** Coin-multiplier values available on the board (of the triggering bet). */
+  multipliers: number[];
+  /** Cells that double everything collected afterwards. */
+  x2Count: number;
+  /** "Cat burglar" cells that steal a multiplier from the board. */
+  thiefCount: number;
+  /** Cell value stolen by a thief, as a multiplier of the bet. */
+  thiefSteal: number;
+}
+
+export type SlotFeature = FreeSpinsFeature | PickBonusFeature;
 
 export interface SlotConfig {
   id: string;
@@ -66,6 +86,34 @@ export interface SpinResult {
   scatterCount: number;
   scatterWin: number;
   freeSpinsAwarded: number;
+  pickBonusAwarded: boolean;
   multiplier: number;
   totalWin: number;
+}
+
+export interface PickCell {
+  index: number;
+  kind: "coin" | "x2" | "thief";
+  multiplier: number;
+  /** True for the cell stolen by a thief, if any. */
+  stolen?: boolean;
+}
+
+export interface PickBonusResult {
+  cells: PickCell[];
+  picks: number;
+  /** Revealed cell indices, in pick order. */
+  chosen: number[];
+  multiplierSum: number;
+  doublingApplied: boolean;
+  thiefSteal: number;
+  totalMultiplier: number;
+  /** totalMultiplier × bet — the coins credited. */
+  win: number;
+}
+
+/** Feature state carried between spins (free spins). */
+export interface SpinState {
+  freeSpinsRemaining: number;
+  freeSpinsMultiplier: number;
 }

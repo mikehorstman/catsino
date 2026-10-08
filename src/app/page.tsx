@@ -26,9 +26,14 @@ export default async function HomePage() {
   return (
     <PageShell>
       <section className="relative overflow-hidden rounded-3xl border border-gold-500/20 bg-gradient-to-br from-ink-800/80 via-ink-900/60 to-neon-purple/10 p-8 sm:p-12">
-        <div className="absolute -right-10 top-1/2 hidden -translate-y-1/2 text-[12rem] opacity-10 md:block" aria-hidden>
-          🐈‍⬛
-        </div>
+        {/* Real photo backdrop, blended into the panel. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/art/brand/hero.jpg"
+          alt=""
+          className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-1/2 object-cover opacity-40 md:block"
+          style={{ maskImage: "linear-gradient(to left, black, transparent)", WebkitMaskImage: "linear-gradient(to left, black, transparent)" }}
+        />
         <div className="relative max-w-2xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-gold-500/30 bg-gold-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-gold-200">
             <Sparkles className="h-3.5 w-3.5" /> Free to play · Virtual coins only

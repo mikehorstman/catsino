@@ -78,6 +78,32 @@ export interface IdempotencyRecord {
   createdAt: string;
 }
 
+/**
+ * An in-progress or completed bonus game (e.g. pick-and-win). The board is
+ * generated server-side at trigger time and stored so a client reload cannot
+ * change the outcome.
+ */
+export interface BonusGameRecord {
+  id: string;
+  userId: string;
+  gameId: string;
+  kind: "bonus-game" | "free-spins";
+  bet: number;
+  status: "active" | "complete";
+  /** Pick-board cells (server-only until picked). */
+  board?: unknown;
+  picks?: number;
+  /** Revealed cell indices so far. */
+  chosen?: number[];
+  /** Running total credited so far (pick bonus credits once at the end). */
+  accumulatedWin: number;
+  /** Free-spin bookkeeping. */
+  freeSpinsRemaining?: number;
+  freeSpinsMultiplier?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Store {
   getUserById(id: string): UserRecord | undefined;
   getUserByEmail(email: string): UserRecord | undefined;
@@ -98,4 +124,9 @@ export interface Store {
 
   getIdempotency(key: string, userId: string): IdempotencyRecord | undefined;
   putIdempotency(record: IdempotencyRecord): void;
+
+  createBonusGame(game: BonusGameRecord): void;
+  getBonusGame(id: string): BonusGameRecord | undefined;
+  getActiveBonusGame(userId: string, gameId: string): BonusGameRecord | undefined;
+  updateBonusGame(id: string, patch: Partial<BonusGameRecord>): void;
 }

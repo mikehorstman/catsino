@@ -7,6 +7,7 @@ interface WinLike {
   totalWin: number;
   lineWins: { lineIndex: number; symbolId: string; payout: number }[];
   freeSpinsAwarded: number;
+  pickBonusAwarded?: boolean;
 }
 
 /** Win presentation: count-up total plus a confetti burst for big wins. */
@@ -50,6 +51,8 @@ export function WinBanner({ win, bet }: { win: WinLike | null; bet: number }) {
   }
 
   const isBig = win.totalWin >= bet * 20;
+  const lineCount = win.lineWins?.length ?? 0;
+  const freeSpins = win.freeSpinsAwarded ?? 0;
 
   return (
     <div
@@ -68,9 +71,9 @@ export function WinBanner({ win, bet }: { win: WinLike | null; bet: number }) {
         </p>
       </div>
       <div className="text-right text-sm text-text-muted">
-        {win.lineWins.length > 0 && <p>{win.lineWins.length} winning line(s)</p>}
-        {win.freeSpinsAwarded > 0 && (
-          <p className="font-semibold text-neon-purple">+{win.freeSpinsAwarded} free spins!</p>
+        {lineCount > 0 && <p>{lineCount} winning line(s)</p>}
+        {freeSpins > 0 && (
+          <p className="font-semibold text-neon-purple">+{freeSpins} free spins!</p>
         )}
       </div>
     </div>

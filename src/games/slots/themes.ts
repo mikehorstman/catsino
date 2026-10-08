@@ -26,6 +26,7 @@ export const SLOT_THEMES: Record<string, SlotTheme> = {
       fish: "🐟",
       yarn: "🧶",
       paw: "🐾",
+      mouse: "🐭",
       bell: "🔔",
     },
     symbolColour: {
@@ -37,6 +38,7 @@ export const SLOT_THEMES: Record<string, SlotTheme> = {
       fish: "#38bdf8",
       yarn: "#ec4899",
       paw: "#d4af37",
+      mouse: "#a3e635",
       bell: "#facc15",
     },
   },
@@ -53,6 +55,7 @@ export const SLOT_THEMES: Record<string, SlotTheme> = {
       koi: "🐠",
       sushi: "🍣",
       fan: "🪭",
+      bento: "🍱",
       "wind-chime": "🎐",
     },
     symbolColour: {
@@ -64,6 +67,7 @@ export const SLOT_THEMES: Record<string, SlotTheme> = {
       koi: "#fb923c",
       sushi: "#fca5a5",
       fan: "#22d3ee",
+      bento: "#a3e635",
       "wind-chime": "#a3e635",
     },
   },
@@ -71,4 +75,14 @@ export const SLOT_THEMES: Record<string, SlotTheme> = {
 
 export function getSlotTheme(id: string): SlotTheme {
   return SLOT_THEMES[id] ?? SLOT_THEMES["cat-meow"];
+}
+
+/** Real photo for a slot symbol, served from `public/art`. */
+export function symbolImage(slotId: string, symbolId: string): string {
+  return `/art/slots/${slotId}/${symbolId}.jpg`;
+}
+
+/** Full-bleed background photo for a slot. */
+export function slotBackgroundImage(slotId: string): string {
+  return `/art/slots/${slotId}/background.jpg`;
 }

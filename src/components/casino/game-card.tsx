@@ -4,9 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import type { GameMeta } from "@/games/catalog";
 import { cn } from "@/lib/utils";
 
-/** A casino-style game tile with gradient art placeholder. */
+/** A game tile using a real photo cover, falling back to a gradient. */
 export function GameCard({ game, className }: { game: GameMeta; className?: string }) {
   const live = game.status === "live";
+  const cover =
+    game.kind === "slots"
+      ? `/art/slots/${game.id}/background.jpg`
+      : "/art/brand/coin.jpg";
+
   return (
     <Link
       href={live ? game.href : "#"}
@@ -17,12 +22,15 @@ export function GameCard({ game, className }: { game: GameMeta; className?: stri
         className,
       )}
     >
-      <div className={cn("relative aspect-[4/3] bg-gradient-to-br", game.accent)}>
-        <div className="absolute inset-0 grid place-items-center">
-          <span className="text-6xl drop-shadow-lg transition-transform duration-500 group-hover:scale-110" aria-hidden>
-            {game.kind === "roulette" ? "🎡" : "🐱"}
-          </span>
-        </div>
+      <div className={cn("relative aspect-[4/3] overflow-hidden bg-gradient-to-br", game.accent)}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={cover}
+          alt=""
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover opacity-90 transition-transform duration-500 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink-950/90 via-ink-950/20 to-transparent" />
         {live ? (
           <span className="absolute bottom-3 left-3 flex h-11 w-11 items-center justify-center rounded-full bg-gold-500 text-ink-950 opacity-0 shadow-glow-gold transition-opacity duration-300 group-hover:opacity-100">
             <Play className="h-5 w-5 translate-x-0.5" fill="currentColor" />

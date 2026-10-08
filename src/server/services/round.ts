@@ -1,6 +1,7 @@
 import { createSecureRng } from "@/engine/rng/secure";
-import { spinSlot, type SpinState } from "@/engine/slots/engine";
-import type { SlotConfig } from "@/engine/slots/types";
+import { spinSlot } from "@/engine/slots/engine";
+import { generatePickBoard, resolvePick, settlePickBonus, type GeneratedBoard } from "@/engine/slots/bonus";
+import type { PickBonusResult, PickCell, SlotConfig, SpinState } from "@/engine/slots/types";
 import { spinRoulette } from "@/engine/roulette/engine";
 import type { Bet, RouletteResult } from "@/engine/roulette/types";
 import type { Store, RoundRecord, UserRecord } from "@/server/store/types";
@@ -17,12 +18,18 @@ export class RoundError extends Error {
   }
 }
 
+export type SlotBonus =
+  | { type: "pickBonus"; id: string; picks: number; cellCount: number; bet: number }
+  | { type: "freeSpins"; remaining: number; multiplier: number; bet: number }
+  | null;
+
 export interface SlotRoundResponse {
   kind: "slots";
   roundId: string;
   balance: number;
   result: ReturnType<typeof spinSlot>;
   progression: RoundOutcome;
+  bonus: SlotBonus;
 }
 
 export interface RouletteRoundResponse {
@@ -113,6 +120,75 @@ export class RoundService {
         createdAt: new Date().toISOString(),
       });
 
+      // Start the relevant bonus game, if one was triggered.
+      let bonus: SlotBonus = null;
+      const pickFeature = config.features.find((f) => f.type === "pickBonus");
+      const freeFeature = config.features.find((f) => f.type === "freeSpins");
+
+      if (result.pickBonusAwarded && pickFeature?.type === "pickBonus") {
+        const board = generatePickBoard(pickFeature, this.rng);
+        const bonusId = newId();
+        this.store.createBonusGame({
+          id: bonusId,
+          userId: user.id,
+          gameId: config.id,
+          kind: "bonus-game",
+          bet,
+          status: "active",
+          board,
+          picks: pickFeature.picks,
+          chosen: [],
+          accumulatedWin: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        bonus = {
+          type: "pickBonus",
+          id: bonusId,
+          picks: pickFeature.picks,
+          cellCount: pickFeature.rows * pickFeature.cols,
+          bet,
+        };
+      } else if (result.nextState.freeSpinsRemaining > 0) {
+        // Only create a free-spins game when starting fresh; a retrigger during
+        // free spins keeps the existing game and just tops up the count.
+        const existing = this.store.getActiveBonusGame(user.id, config.id);
+        if (existing && existing.kind === "free-spins") {
+          this.store.updateBonusGame(existing.id, {
+            freeSpinsRemaining: result.nextState.freeSpinsRemaining,
+            freeSpinsMultiplier: result.nextState.freeSpinsMultiplier,
+            updatedAt: new Date().toISOString(),
+          });
+          bonus = {
+            type: "freeSpins",
+            remaining: result.nextState.freeSpinsRemaining,
+            multiplier: result.nextState.freeSpinsMultiplier,
+            bet,
+          };
+        } else if (!isFreeSpin && freeFeature?.type === "freeSpins") {
+          const bonusId = newId();
+          this.store.createBonusGame({
+            id: bonusId,
+            userId: user.id,
+            gameId: config.id,
+            kind: "free-spins",
+            bet,
+            status: "active",
+            freeSpinsRemaining: result.nextState.freeSpinsRemaining,
+            freeSpinsMultiplier: result.nextState.freeSpinsMultiplier,
+            accumulatedWin: 0,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+          bonus = {
+            type: "freeSpins",
+            remaining: result.nextState.freeSpinsRemaining,
+            multiplier: result.nextState.freeSpinsMultiplier,
+            bet,
+          };
+        }
+      }
+
       const fresh = this.store.getUserById(user.id)!;
       const progression = this.progression.applyRoundResult(fresh, {
         bet: charge,
@@ -126,6 +202,7 @@ export class RoundService {
         balance: this.wallet.getBalance(user.id),
         result,
         progression,
+        bonus,
       };
       this.remember(user.id, idempotencyKey, roundId, response);
       return response;
@@ -200,7 +277,195 @@ export class RoundService {
     this.store.createRound(round);
   }
 
+  /**
+   * Resolve the state of a slot for a player: an active bonus game (blocking
+   * regular spins) or an in-progress free-spin round.
+   */
+  getSlotState(user: UserRecord, config: SlotConfig): SlotState {
+    const pickFeature = config.features.find((f) => f.type === "pickBonus");
+    const bonus = this.store.getActiveBonusGame(user.id, config.id);
+    if (bonus && bonus.kind === "bonus-game") {
+      const board = bonus.board as GeneratedBoard;
+      const chosen = bonus.chosen ?? [];
+      return {
+        activeBonus: {
+          id: bonus.id,
+          kind: "pickBonus",
+          bet: bonus.bet,
+          picks: bonus.picks ?? 0,
+          chosen,
+          cellCount: pickFeature?.type === "pickBonus" ? pickFeature.rows * pickFeature.cols : 9,
+          revealed: chosen.map((i) => resolvePick(board, i)),
+        },
+      };
+    }
+    if (bonus && bonus.kind === "free-spins" && (bonus.freeSpinsRemaining ?? 0) > 0) {
+      return {
+        freeSpins: {
+          remaining: bonus.freeSpinsRemaining ?? 0,
+          multiplier: bonus.freeSpinsMultiplier ?? 1,
+          bet: bonus.bet,
+          accumulated: bonus.accumulatedWin ?? 0,
+        },
+      };
+    }
+    return {};
+  }
+
+  /** Play one free spin. No coin is charged; wins are credited normally. */
+  async playFreeSpin(opts: { user: UserRecord; config: SlotConfig }): Promise<SlotRoundResponse> {
+    const { user, config } = opts;
+
+    return withLock(`wallet:${user.id}`, () => {
+      const game = this.store.getActiveBonusGame(user.id, config.id);
+      if (!game || game.kind !== "free-spins" || (game.freeSpinsRemaining ?? 0) <= 0) {
+        throw new RoundError("NO_FREE_SPINS", "No free spins remaining");
+      }
+
+      const state = {
+        freeSpinsRemaining: game.freeSpinsRemaining ?? 0,
+        freeSpinsMultiplier: game.freeSpinsMultiplier ?? 1,
+      };
+      const result = spinSlot(config, game.bet, this.rng, state);
+      const roundId = newId();
+
+      this.wallet.settleRound(user.id, 0, result.totalWin, roundId);
+      this.recordRound({
+        id: roundId,
+        userId: user.id,
+        gameId: config.id,
+        kind: "slots",
+        betTotal: 0,
+        winTotal: result.totalWin,
+        outcome: result,
+        configVersion: config.version,
+        createdAt: new Date().toISOString(),
+      });
+
+      if (result.nextState.freeSpinsRemaining <= 0) {
+        this.store.updateBonusGame(game.id, {
+          status: "complete",
+          freeSpinsRemaining: 0,
+          accumulatedWin: (game.accumulatedWin ?? 0) + result.totalWin,
+          updatedAt: new Date().toISOString(),
+        });
+      } else {
+        this.store.updateBonusGame(game.id, {
+          freeSpinsRemaining: result.nextState.freeSpinsRemaining,
+          freeSpinsMultiplier: result.nextState.freeSpinsMultiplier,
+          accumulatedWin: (game.accumulatedWin ?? 0) + result.totalWin,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
+      const fresh = this.store.getUserById(user.id)!;
+      const progression = this.progression.applyRoundResult(fresh, {
+        bet: 0,
+        win: result.totalWin,
+        isSpin: true,
+      });
+
+      return {
+        kind: "slots" as const,
+        roundId,
+        balance: this.wallet.getBalance(user.id),
+        result,
+        progression,
+        bonus: null,
+      };
+    });
+  }
+
+  /** Reveal one pick-bonus cell. Pure lookup against the stored board. */
+  pickBonusCell(opts: {
+    user: UserRecord;
+    config: SlotConfig;
+    gameId: string;
+    index: number;
+  }): PickResponse {
+    const { user, config, gameId, index } = opts;
+    const game = this.store.getBonusGame(gameId);
+    if (!game || game.userId !== user.id || game.gameId !== config.id) {
+      throw new RoundError("NOT_FOUND", "Bonus game not found");
+    }
+    if (game.status !== "active") throw new RoundError("ALREADY_COMPLETE", "Bonus game is already finished");
+
+    const board = game.board as GeneratedBoard;
+    const chosen = game.chosen ?? [];
+    if (chosen.includes(index)) throw new RoundError("ALREADY_PICKED", "That cell has already been revealed");
+
+    const cell = resolvePick(board, index);
+    const nextChosen = [...chosen, index];
+    const picks = game.picks ?? 0;
+    const complete = nextChosen.length >= picks;
+
+    let result: PickBonusResult | null = null;
+    let balance = this.wallet.getBalance(user.id);
+    let progression: RoundOutcome | null = null;
+
+    if (complete) {
+      result = settlePickBonus(board, nextChosen, game.bet);
+      const roundId = newId();
+      this.wallet.settleRound(user.id, 0, result.win, roundId);
+      this.recordRound({
+        id: roundId,
+        userId: user.id,
+        gameId: config.id,
+        kind: "slots",
+        betTotal: 0,
+        winTotal: result.win,
+        outcome: { bonus: "pick", result },
+        configVersion: config.version,
+        createdAt: new Date().toISOString(),
+      });
+      const fresh = this.store.getUserById(user.id)!;
+      progression = this.progression.applyRoundResult(fresh, { bet: 0, win: result.win, isSpin: false });
+      balance = this.wallet.getBalance(user.id);
+      this.store.updateBonusGame(game.id, {
+        status: "complete",
+        chosen: nextChosen,
+        accumulatedWin: result.win,
+        updatedAt: new Date().toISOString(),
+      });
+    } else {
+      this.store.updateBonusGame(game.id, { chosen: nextChosen, updatedAt: new Date().toISOString() });
+    }
+
+    return {
+      cell,
+      chosen: nextChosen,
+      picksRemaining: Math.max(0, picks - nextChosen.length),
+      complete,
+      result,
+      balance,
+      progression,
+    };
+  }
+
   getWalletService(): WalletService {
     return this.wallet;
   }
+}
+
+export interface PickResponse {
+  cell: PickCell;
+  chosen: number[];
+  picksRemaining: number;
+  complete: boolean;
+  result: PickBonusResult | null;
+  balance: number;
+  progression: RoundOutcome | null;
+}
+
+export interface SlotState {
+  activeBonus?: {
+    id: string;
+    kind: "pickBonus";
+    bet: number;
+    picks: number;
+    chosen: number[];
+    cellCount: number;
+    revealed: PickCell[];
+  };
+  freeSpins?: { remaining: number; multiplier: number; bet: number; accumulated: number };
 }

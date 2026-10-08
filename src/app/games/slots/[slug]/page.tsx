@@ -9,6 +9,7 @@ import { getSlotTheme } from "@/games/slots/themes";
 import { getCurrentUser } from "@/server/auth/guards";
 import { getStore } from "@/server/store/memory";
 import { WalletService } from "@/server/store/wallet";
+import { RoundService } from "@/server/services/round";
 
 const LIVE_SLUGS = ["cat-meow", "neko-nights"];
 
@@ -40,6 +41,7 @@ export default async function SlotPage({ params }: { params: Promise<{ slug: str
   const balance = user ? new WalletService(getStore()).getBalance(user.id) : 0;
   const theme = getSlotTheme(slug);
   const meta = getGameMeta(slug);
+  const initialState = user ? new RoundService(getStore()).getSlotState(user, config) : {};
 
   return (
     <PageShell>
@@ -50,6 +52,7 @@ export default async function SlotPage({ params }: { params: Promise<{ slug: str
             theme={theme}
             initialBalance={balance}
             authed={Boolean(user)}
+            initialState={initialState}
           />
         </div>
         <aside className="space-y-5">

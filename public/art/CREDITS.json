@@ -1,0 +1,202 @@
+{
+  "brand/logo": {
+    "query": "cat face portrait",
+    "title": "Cat face portrait resting",
+    "creator": "Tom Harpel from Seattle, Washington, United States",
+    "license": "by 2.0",
+    "source": "https://commons.wikimedia.org/w/index.php?curid=332918",
+    "provider": "wikimedia"
+  },
+  "brand/coin": {
+    "query": "gold coin macro",
+    "title": "Minhas Economias | My Savings",
+    "creator": "Jeff Belmonte",
+    "license": "by 2.0",
+    "source": "https://www.flickr.com/photos/72236935@N00/6567669",
+    "provider": "flickr"
+  },
+  "slots/cat-meow/background": {
+    "query": "grey cat closeup",
+    "title": "Grey Cat closeup",
+    "creator": "Sagive SEO",
+    "license": "by-sa 3.0",
+    "source": "https://commons.wikimedia.org/w/index.php?curid=33320119",
+    "provider": "wikimedia"
+  },
+  "slots/neko-nights/background": {
+    "query": "neon tokyo night",
+    "title": "Night Life @ Shinjuku, Tokyo",
+    "creator": "kevinpoh",
+    "license": "by 2.0",
+    "source": "https://www.flickr.com/photos/7679455@N03/4563388587",
+    "provider": "flickr"
+  },
+  "slots/cat-meow/golden-cat": {
+    "query": "golden british shorthair cat",
+    "title": "A Sleepy Golden British Shorthair cat looking at the camera",
+    "creator": "Demon cats",
+    "license": "by 4.0",
+    "source": "https://commons.wikimedia.org/w/index.php?curid=182061362",
+    "provider": "wikimedia"
+  },
+  "slots/cat-meow/cat-royal": {
+    "query": "white persian cat",
+    "title": "Fluffy White Persian Cat",
+    "creator": "Kyogrexu",
+    "license": "by-sa 4.0",
+    "source": "https://commons.wikimedia.org/w/index.php?curid=141919540",
+    "provider": "wikimedia"
+  },
+  "slots/cat-meow/cat-calico": {
+    "query": "calico cat",
+    "title": "Calico cat on the street",
+    "creator": "pelican",
+    "license": "by-sa 2.0",
+    "source": "https://www.flickr.com/photos/85936780@N00/7215943",
+    "provider": "flickr"
+  },
+  "slots/cat-meow/cat-tabby": {
+    "query": "tabby cat",
+    "title": "Tabby cat",
+    "creator": "malfet_",
+    "license": "by 2.0",
+    "source": "https://www.flickr.com/photos/74504731@N00/1413379559",
+    "provider": "flickr"
+  },
+  "slots/cat-meow/cat-black": {
+    "query": "black cat",
+    "title": "A Black Cat Crosses My Path Every Day",
+    "creator": "aturkus",
+    "license": "by 2.0",
+    "source": "https://www.flickr.com/photos/76345376@N00/294769691",
+    "provider": "flickr"
+  },
+  "slots/cat-meow/fish": {
+    "query": "goldfish",
+    "title": "Ickle baby goldfish",
+    "creator": "threefingeredlord",
+    "license": "by-sa 2.0",
+    "source": "https://www.flickr.com/photos/12568296@N06/3894650658",
+    "provider": "flickr"
+  },
+  "slots/cat-meow/yarn": {
+    "query": "ball of yarn",
+    "title": "World's Largest Ball of Yarn",
+    "creator": "KirkOls",
+    "license": "by 2.0",
+    "source": "https://www.flickr.com/photos/39175939@N00/4903201376",
+    "provider": "flickr"
+  },
+  "slots/cat-meow/paw": {
+    "query": "cat paw close up",
+    "title": "Cat's Paw close up",
+    "creator": "sabianmaggy",
+    "license": "by 2.0",
+    "source": "https://www.flickr.com/photos/40765798@N00/218521393",
+    "provider": "flickr"
+  },
+  "slots/cat-meow/mouse": {
+    "query": "house mouse",
+    "title": "House Mouse",
+    "creator": "Ryan Somma",
+    "license": "by-sa 2.0",
+    "source": "https://www.flickr.com/photos/14405058@N08/2169689998",
+    "provider": "flickr"
+  },
+  "slots/cat-meow/bell": {
+    "query": "gold bell",
+    "title": "Gold bell",
+    "creator": "eurok",
+    "license": "by 2.0",
+    "source": "https://www.flickr.com/photos/21025851@N00/2169213554",
+    "provider": "flickr"
+  },
+  "slots/neko-nights/lucky-cat": {
+    "query": "maneki neko lucky cat",
+    "title": "Maneki Neko Lucky Cat",
+    "creator": "Mr.TinDC",
+    "license": "by-nd 2.0",
+    "source": "https://www.flickr.com/photos/7471115@N08/4762549554",
+    "provider": "flickr"
+  },
+  "slots/neko-nights/neon-neko": {
+    "query": "neon cat sign",
+    "title": "Neon Cat Sign",
+    "creator": "PunkToad",
+    "license": "by 2.0",
+    "source": "https://www.flickr.com/photos/83699771@N00/22191961411",
+    "provider": "flickr"
+  },
+  "slots/neko-nights/samurai-cat": {
+    "query": "cat japan street",
+    "title": "Cats Livin' - A shop for cats only",
+    "creator": "DocChewbacca",
+    "license": "by-sa 2.0",
+    "source": "https://www.flickr.com/photos/49462908@N00/2769915203",
+    "provider": "flickr"
+  },
+  "slots/neko-nights/lantern": {
+    "query": "chinese paper lantern",
+    "title": "Chinese paper lanterns",
+    "creator": "NancyFry",
+    "license": "by 2.0",
+    "source": "https://www.flickr.com/photos/36436564@N07/15199351975",
+    "provider": "flickr"
+  },
+  "slots/neko-nights/sakura": {
+    "query": "cherry blossom close",
+    "title": "Cherry Blossoms - close up",
+    "creator": "Sandra Lee Schubert",
+    "license": "by 2.0",
+    "source": "https://www.flickr.com/photos/43439951@N07/3999877922",
+    "provider": "flickr"
+  },
+  "slots/neko-nights/koi": {
+    "query": "koi carp",
+    "title": "Koi carp.",
+    "creator": "Bernard Spragg",
+    "license": "cc0 1.0",
+    "source": "https://www.flickr.com/photos/88123769@N02/17918417164",
+    "provider": "flickr"
+  },
+  "slots/neko-nights/sushi": {
+    "query": "sushi salmon",
+    "title": "Preparing Sushi Salmon",
+    "creator": "chrisada",
+    "license": "by 2.0",
+    "source": "https://www.flickr.com/photos/13507995@N00/13916577767",
+    "provider": "flickr"
+  },
+  "slots/neko-nights/fan": {
+    "query": "japanese folding fan",
+    "title": "Elegant antique Japanese folding fan",
+    "creator": "artinstitutechicago",
+    "license": "cc0 1.0",
+    "source": "https://www.rawpixel.com/image/9007719/fan",
+    "provider": "rawpixel"
+  },
+  "slots/neko-nights/bento": {
+    "query": "bento box",
+    "title": "bento box",
+    "creator": "josey4628",
+    "license": "by 2.0",
+    "source": "https://www.flickr.com/photos/33945401@N07/3316594385",
+    "provider": "flickr"
+  },
+  "slots/neko-nights/wind-chime": {
+    "query": "glass wind chime",
+    "title": "Glass Wind Chime",
+    "creator": "Raw Nald",
+    "license": "by 2.0",
+    "source": "https://www.flickr.com/photos/8453130@N02/34254147351",
+    "provider": "flickr"
+  },
+  "brand/hero": {
+    "query": "british shorthair cat portrait",
+    "title": "READING A BOOK..",
+    "creator": "LUNARIX-PIX",
+    "license": "by 2.0",
+    "source": "https://www.flickr.com/photos/31527375@N03/4497531493",
+    "provider": "flickr"
+  }
+}

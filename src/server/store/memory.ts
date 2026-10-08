@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import type {
+  BonusGameRecord,
   IdempotencyRecord,
   RoundRecord,
   Store,
@@ -16,10 +17,11 @@ interface Data {
   transactions: TransactionRecord[];
   rounds: RoundRecord[];
   idempotency: IdempotencyRecord[];
+  bonusGames: BonusGameRecord[];
 }
 
 function emptyData(): Data {
-  return { users: [], wallets: [], transactions: [], rounds: [], idempotency: [] };
+  return { users: [], wallets: [], transactions: [], rounds: [], idempotency: [], bonusGames: [] };
 }
 
 /**
@@ -125,7 +127,26 @@ class MemoryStore implements Store {
     this.data.idempotency.push(record);
     this.scheduleSave();
   }
+createBonusGame(game: BonusGameRecord) {
+    this.data.bonusGames.push(game);
+    this.scheduleSave();
+  }
+  getBonusGame(id: string) {
+    return this.data.bonusGames.find((g) => g.id === id);
+  }
+  getActiveBonusGame(userId: string, gameId: string) {
+    return this.data.bonusGames.find(
+      (g) => g.userId === userId && g.gameId === gameId && g.status === "active",
+    );
+  }
+  updateBonusGame(id: string, patch: Partial<BonusGameRecord>) {
+    const index = this.data.bonusGames.findIndex((g) => g.id === id);
+    if (index === -1) return;
+    this.data.bonusGames[index] = { ...this.data.bonusGames[index], ...patch };
+    this.scheduleSave();
+  }
 
+  
   /** Test helper: reset all state. */
   reset() {
     this.data = emptyData();

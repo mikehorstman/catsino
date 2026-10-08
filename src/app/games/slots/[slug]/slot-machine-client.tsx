@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import type { SlotConfig } from "@/engine/slots/types";
 import type { SlotTheme } from "@/games/slots/themes";
+import type { SlotState } from "@/server/services/round";
 
 /**
  * PixiJS is heavy and browser-only, so the slot machine is loaded with
@@ -25,6 +26,7 @@ export function SlotMachineClient(props: {
   theme: SlotTheme;
   initialBalance: number;
   authed: boolean;
+  initialState: SlotState;
 }) {
   return <SlotMachine {...props} />;
 }

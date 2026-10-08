@@ -1,4 +1,5 @@
-import type { LineWin, SlotConfig, SpinResult } from "./types";
+import type { LineWin, SlotConfig, SpinResult, SpinState } from "./types";
+import { MIN_MATCH, RETRIGGER_MULTIPLIER_STEP } from "./constants";
 import type { Rng } from "../rng/types";
 
 /**
@@ -92,7 +93,7 @@ export function evaluateSpin(
 
   config.paylines.forEach((payline, lineIndex) => {
     const { symbolId, count, positions } = matchLine(config, grid, payline);
-    if (symbolId === "" || count < 3) return;
+    if (symbolId === "" || count < MIN_MATCH) return;
 
     const payouts = paytableFor(config, symbolId);
     const symbolMultiplier = payouts[count];
@@ -131,10 +132,7 @@ export function evaluateSpin(
 }
 
 /** Feature state carried between spins (free spins). */
-export interface SpinState {
-  freeSpinsRemaining: number;
-  freeSpinsMultiplier: number;
-}
+export type { SpinState };
 
 /**
  * Run one slot spin. This is the single entry point the server calls.
@@ -159,11 +157,26 @@ export function spinSlot(
   const grid = buildGrid(config, stops);
   const { lineWins, scatterCount, scatterWin } = evaluateSpin(config, grid, lineBet, multiplier);
 
+  const freeSpinsFeature = config.features.find((f) => f.type === "freeSpins");
+  const pickFeature = config.features.find((f) => f.type === "pickBonus");
+
+  // Free spins: trigger count is read against the free-spins trigger symbol.
   let freeSpinsAwarded = 0;
-  for (const feature of config.features) {
-    if (feature.type === "freeSpins" && scatterCount >= feature.triggerCount) {
-      freeSpinsAwarded += feature.spins;
+  let triggeredFreeSpins = false;
+  if (freeSpinsFeature && freeSpinsFeature.type === "freeSpins") {
+    const triggerCount = countSymbol(config, grid, freeSpinsFeature.triggerSymbol);
+    if (triggerCount >= freeSpinsFeature.triggerCount) {
+      freeSpinsAwarded = freeSpinsFeature.spins;
+      triggeredFreeSpins = true;
     }
+  }
+
+  // Pick bonus: triggered by its own scatter symbol, and never during free spins
+  // so the two features stay independent.
+  let pickBonusAwarded = false;
+  if (pickFeature && pickFeature.type === "pickBonus" && !isFreeSpin) {
+    const triggerCount = countSymbol(config, grid, pickFeature.triggerSymbol);
+    if (triggerCount >= pickFeature.triggerCount) pickBonusAwarded = true;
   }
 
   const lineTotal = lineWins.reduce((sum, win) => sum + win.payout, 0);
@@ -171,9 +184,19 @@ export function spinSlot(
 
   const remainingFromPrevious = state?.freeSpinsRemaining ?? 0;
   const consumed = isFreeSpin ? remainingFromPrevious - 1 : 0;
+  const newRemaining = Math.max(0, consumed + freeSpinsAwarded);
+
+  // Retriggering free spins during a free-spin round escalates the multiplier.
+  let nextMultiplier = multiplier;
+  if (isFreeSpin && triggeredFreeSpins) {
+    nextMultiplier = multiplier + RETRIGGER_MULTIPLIER_STEP;
+  } else if (!isFreeSpin && newRemaining > 0 && freeSpinsFeature?.type === "freeSpins") {
+    nextMultiplier = freeSpinsFeature.multiplier;
+  }
+
   const nextState: SpinState = {
-    freeSpinsRemaining: Math.max(0, consumed + freeSpinsAwarded),
-    freeSpinsMultiplier: multiplier,
+    freeSpinsRemaining: newRemaining,
+    freeSpinsMultiplier: nextMultiplier,
   };
 
   return {
@@ -183,8 +206,20 @@ export function spinSlot(
     scatterCount,
     scatterWin,
     freeSpinsAwarded,
+    pickBonusAwarded,
     multiplier,
     totalWin,
     nextState,
   };
+}
+
+/** Count occurrences of a symbol anywhere on the grid. */
+function countSymbol(config: SlotConfig, grid: string[][], symbolId: string): number {
+  let count = 0;
+  for (let row = 0; row < config.rows; row += 1) {
+    for (let col = 0; col < config.cols; col += 1) {
+      if (grid[row][col] === symbolId) count += 1;
+    }
+  }
+  return count;
 }
