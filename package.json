@@ -14,15 +14,14 @@
     "simulate:rtp": "tsx scripts/simulate-rtp.ts"
   },
   "dependencies": {
-    "@node-rs/argon2": "^2.2.2",
     "@radix-ui/react-slot": "^1.4.0",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "firebase": "^12.19.0",
     "firebase-admin": "^14.5.0",
     "gsap": "^3.15.0",
     "howler": "^2.2.4",
-    "jose": "^6.2.12",
     "lucide-react": "^1.52.0",
     "next": "16.4.0",
     "pixi.js": "^8.22.0",

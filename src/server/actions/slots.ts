@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getSlotConfig } from "@/games/slots/registry";
-import { getOrCreateUser } from "@/server/auth/guards";
+import { requireUser } from "@/server/auth/guards";
 import { getStore } from "@/server/store";
 import { RoundError, RoundService } from "@/server/services/round";
 import type { ActionResult } from "./auth";
@@ -24,7 +24,7 @@ export async function spinSlotAction(
       error: { code: "VALIDATION", message: "Invalid spin request" },
     };
 
-  const user = await getOrCreateUser();
+  const user = await requireUser();
 
   const config = getSlotConfig(parsed.data.gameId);
   if (!config)
@@ -62,7 +62,7 @@ export async function playFreeSpinAction(
       error: { code: "VALIDATION", message: "Invalid request" },
     };
 
-  const user = await getOrCreateUser();
+  const user = await requireUser();
 
   const config = getSlotConfig(parsed.data.gameId);
   if (!config)
@@ -102,7 +102,7 @@ export async function pickBonusAction(
       error: { code: "VALIDATION", message: "Invalid pick" },
     };
 
-  const user = await getOrCreateUser();
+  const user = await requireUser();
 
   const config = getSlotConfig(parsed.data.gameId);
   if (!config)

@@ -20,10 +20,9 @@ export interface UserRecord {
   id: string;
   email: string;
   displayName: string;
-  passwordHash: string;
   role: "player" | "admin";
-  /** Guests are auto-provisioned so the app is playable without signing in. */
-  isGuest?: boolean;
+  /** Firebase Auth sign-in provider, e.g. "password" or "google.com". */
+  provider?: string;
   createdAt: string;
   // Progression
   xp: number;
@@ -128,6 +127,16 @@ export interface Store {
   getUserByEmail(email: string): Promise<UserRecord | undefined>;
   createUser(user: UserRecord): Promise<void>;
   updateUser(id: string, patch: Partial<UserRecord>): Promise<void>;
+  /**
+   * Atomically create a user, their wallet and the signup ledger entry.
+   * Returns false (writing nothing) if the user already exists, which makes
+   * signup safe to retry and the welcome bonus impossible to double-credit.
+   */
+  provisionUser(input: {
+    user: UserRecord;
+    wallet: WalletRecord;
+    transaction: TransactionRecord;
+  }): Promise<boolean>;
 
   getWallet(userId: string): Promise<WalletRecord | undefined>;
   putWallet(wallet: WalletRecord): Promise<void>;

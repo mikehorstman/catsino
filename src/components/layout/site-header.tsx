@@ -16,6 +16,8 @@ import { BalancePill } from "@/components/casino/balance-pill";
 import { JackpotTicker } from "@/components/casino/jackpot-ticker";
 import { Button } from "@/components/ui/button";
 import { useAudioStore } from "@/stores/audio";
+import { signOut } from "firebase/auth";
+import { getFirebaseAuth } from "@/lib/firebase-client";
 import { logoutAction } from "@/server/actions/auth";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +34,7 @@ export function SiteHeader({
   balance,
   jackpotPool,
 }: {
-  user: { displayName: string; level: number; isGuest?: boolean } | null;
+  user: { displayName: string; level: number } | null;
   balance: number;
   jackpotPool: number;
 }) {
@@ -45,6 +47,7 @@ export function SiteHeader({
 
   function logout() {
     startTransition(async () => {
+      await signOut(getFirebaseAuth()).catch(() => undefined);
       await logoutAction();
       router.push("/");
       router.refresh();
@@ -106,27 +109,16 @@ export function SiteHeader({
                 >
                   <UserIcon className="h-4 w-4" />
                   <span className="font-medium">{user.displayName}</span>
-                  {user.isGuest && (
-                    <span className="rounded-full border border-gold-500/40 bg-gold-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gold-200">
-                      Guest
-                    </span>
-                  )}
                 </Link>
-                {user.isGuest ? (
-                  <Button asChild size="sm">
-                    <Link href="/register">Save progress</Link>
-                  </Button>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={logout}
-                    aria-label="Log out"
-                    disabled={pending}
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </Button>
-                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={logout}
+                  aria-label="Log out"
+                  disabled={pending}
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
               </div>
             </>
           ) : (
@@ -178,22 +170,14 @@ export function SiteHeader({
                     Profile
                   </Link>
                 </Button>
-                {user.isGuest ? (
-                  <Button asChild size="sm" className="flex-1">
-                    <Link href="/register" onClick={() => setMenuOpen(false)}>
-                      Save progress
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={logout}
-                    disabled={pending}
-                  >
-                    <LogOut className="h-4 w-4" /> Log out
-                  </Button>
-                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={logout}
+                  disabled={pending}
+                >
+                  <LogOut className="h-4 w-4" /> Log out
+                </Button>
               </>
             ) : (
               <>

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getOrCreateUser } from "@/server/auth/guards";
+import { requireUser } from "@/server/auth/guards";
 import { getStore } from "@/server/store";
 import { RoundError, RoundService } from "@/server/services/round";
 import { BonusClaimError, BonusService } from "@/server/services/bonus";
@@ -43,7 +43,7 @@ export async function spinRouletteAction(
       error: { code: "VALIDATION", message: "Invalid bets" },
     };
 
-  const user = await getOrCreateUser();
+  const user = await requireUser();
 
   try {
     const service = new RoundService(getStore());
@@ -64,7 +64,7 @@ export async function spinRouletteAction(
 export async function claimDailyBonusAction(): Promise<
   ActionResult<{ amount: number; streak: number }>
 > {
-  const user = await getOrCreateUser();
+  const user = await requireUser();
 
   try {
     const store = getStore();
@@ -86,7 +86,7 @@ export async function claimDailyBonusAction(): Promise<
 export async function claimRefillAction(): Promise<
   ActionResult<{ amount: number }>
 > {
-  const user = await getOrCreateUser();
+  const user = await requireUser();
 
   try {
     const store = getStore();

@@ -6,7 +6,7 @@ import { SectionHeading } from "@/components/casino/section-heading";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GameHistoryTable } from "@/components/casino/game-history-table";
-import { getOrCreateUser } from "@/server/auth/guards";
+import { requireUser } from "@/server/auth/guards";
 import { getStore } from "@/server/store";
 import { WalletService } from "@/server/store/wallet";
 import { levelDef, xpToNextLevel } from "@/games/progression";
@@ -15,7 +15,7 @@ import { formatCoins } from "@/lib/utils";
 export const metadata: Metadata = { title: "Profile" };
 
 export default async function ProfilePage() {
-  const user = await getOrCreateUser();
+  const user = await requireUser();
 
   const store = getStore();
   const wallet = new WalletService(store);

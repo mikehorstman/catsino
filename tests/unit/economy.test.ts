@@ -16,7 +16,6 @@ function makeUser(overrides: Partial<UserRecord> = {}): UserRecord {
     id: "u1",
     email: "cat@example.com",
     displayName: "Test Cat",
-    passwordHash: "x",
     role: "player",
     createdAt: new Date().toISOString(),
     xp: 0,

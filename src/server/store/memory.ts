@@ -90,6 +90,18 @@ export class MemoryStore implements Store {
     this.data.users.push(user);
     this.scheduleSave();
   }
+  async provisionUser(input: {
+    user: UserRecord;
+    wallet: WalletRecord;
+    transaction: TransactionRecord;
+  }) {
+    if (this.data.users.some((u) => u.id === input.user.id)) return false;
+    this.data.users.push(input.user);
+    this.data.wallets.push(input.wallet);
+    this.data.transactions.push(input.transaction);
+    this.scheduleSave();
+    return true;
+  }
   async updateUser(id: string, patch: Partial<UserRecord>) {
     const index = this.data.users.findIndex((u) => u.id === id);
     if (index === -1) return;

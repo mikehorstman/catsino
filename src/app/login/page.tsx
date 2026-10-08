@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Logo } from "@/components/casino/logo";
@@ -9,8 +10,7 @@ export const metadata: Metadata = { title: "Sign in" };
 
 export default async function LoginPage() {
   const user = await getCurrentUser();
-  // Guests can still visit to create a real account.
-  if (user && !user.isGuest) redirect("/");
+  if (user) redirect("/");
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center px-4 py-16">
@@ -22,7 +22,9 @@ export default async function LoginPage() {
         <p className="mb-6 text-sm text-text-muted">
           Sign in to play with your virtual coins.
         </p>
-        <LoginForm />
+        <Suspense>
+          <LoginForm />
+        </Suspense>
       </Card>
     </div>
   );

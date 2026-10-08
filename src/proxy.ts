@@ -1,37 +1,29 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { SESSION_COOKIE } from "@/server/auth/cookie-name";
 
-export const GUEST_COOKIE = "catsino_guest";
+/** Routes reachable without an account. Everything else requires login. */
+const PUBLIC_EXACT = new Set(["/", "/login", "/register", "/forgot-password"]);
+const PUBLIC_PREFIX = ["/credits", "/terms", "/privacy", "/api/auth/", "/robots", "/sitemap"];
+
+function isPublic(pathname: string) {
+  return PUBLIC_EXACT.has(pathname) || PUBLIC_PREFIX.some((p) => pathname.startsWith(p));
+}
 
 /**
- * Assigns a stable guest id cookie so the app is playable without signing in.
- * Middleware is the right place to set cookies — Server Components cannot.
- *
- * The id is set on BOTH the request (so the current render sees it) and the
- * response (so the browser keeps it). Without the request copy, the first
- * render would create a guest with a different id than the cookie.
+ * Optimistic gate: redirect when there is no session cookie at all. The cookie
+ * is *verified* server-side in `requireUser()` on every page and action, so
+ * this only avoids rendering protected pages for anonymous visitors.
  */
 export function proxy(request: NextRequest) {
-  const existing = request.cookies.get(GUEST_COOKIE)?.value;
-  const guestId = existing ?? crypto.randomUUID();
-
-  if (!existing) {
-    request.cookies.set(GUEST_COOKIE, guestId);
+  const { pathname, search } = request.nextUrl;
+  if (isPublic(pathname) || request.cookies.has(SESSION_COOKIE)) {
+    return NextResponse.next();
   }
-
-  const response = NextResponse.next({ request });
-  if (!existing) {
-    response.cookies.set(GUEST_COOKIE, guestId, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 365,
-    });
-  }
-  return response;
+  const login = new URL("/login", request.url);
+  login.searchParams.set("next", pathname + search);
+  return NextResponse.redirect(login);
 }
 
 export const config = {
-  // Skip static assets and the API surface.
   matcher: ["/((?!_next/static|_next/image|art/|audio/|favicon.ico).*)"],
 };

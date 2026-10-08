@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { PageShell } from "@/components/layout/page-shell";
 import { SectionHeading } from "@/components/casino/section-heading";
 import { GameHistoryTable } from "@/components/casino/game-history-table";
-import { getOrCreateUser } from "@/server/auth/guards";
+import { requireUser } from "@/server/auth/guards";
 import { getStore } from "@/server/store";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +25,7 @@ export default async function HistoryPage({
 }: {
   searchParams: Promise<{ filter?: string; page?: string }>;
 }) {
-  const user = await getOrCreateUser();
+  const user = await requireUser();
 
   const sp = await searchParams;
   const filter = FILTERS.some((f) => f.key === sp.filter) ? sp.filter! : "all";

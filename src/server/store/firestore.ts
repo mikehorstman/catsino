@@ -1,7 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { cert, getApps, initializeApp, type App } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
+import { getFirebaseApp } from "@/server/firebase-admin";
 import type {
   BonusGameRecord,
   IdempotencyRecord,
@@ -25,36 +23,6 @@ const COLLECTIONS = {
   bonusGames: "bonusGames",
   jackpot: "jackpot",
 } as const;
-
-/**
- * Resolve service-account credentials from, in order:
- *   1. FIREBASE_SERVICE_ACCOUNT  — the JSON itself (best for hosts/Vercel)
- *   2. GOOGLE_APPLICATION_CREDENTIALS — a path to the JSON
- *   3. .secrets/firebase-service-account.json — local dev default
- */
-function loadCredential() {
-  const inline = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (inline) return cert(JSON.parse(inline));
-
-  const path =
-    process.env.GOOGLE_APPLICATION_CREDENTIALS ??
-    join(process.cwd(), ".secrets/firebase-service-account.json");
-  if (existsSync(path)) return cert(JSON.parse(readFileSync(path, "utf8")));
-
-  throw new Error(
-    "Firestore backend selected but no credentials found. Set FIREBASE_SERVICE_ACCOUNT " +
-      "or GOOGLE_APPLICATION_CREDENTIALS, or place a key at .secrets/firebase-service-account.json",
-  );
-}
-
-function getApp(): App {
-  const existing = getApps();
-  if (existing.length > 0) return existing[0];
-  return initializeApp({
-    credential: loadCredential(),
-    projectId: process.env.FIREBASE_PROJECT_ID ?? "catsino-casino",
-  });
-}
 
 /**
  * Firestore cannot store arrays of arrays (the slot reel grid is number[][]),
@@ -99,7 +67,7 @@ export class FirestoreStore implements Store {
   private db: Firestore;
 
   constructor(db?: Firestore) {
-    this.db = db ?? getFirestore(getApp());
+    this.db = db ?? getFirestore(getFirebaseApp());
     // Records carry optional fields (refId, idempotencyKey, …) that are often
     // undefined; Firestore rejects undefined unless this is enabled.
     this.db.settings({ ignoreUndefinedProperties: true });
@@ -124,6 +92,22 @@ export class FirestoreStore implements Store {
   }
   async createUser(user: UserRecord) {
     await this.col(COLLECTIONS.users).doc(user.id).set(user);
+  }
+  async provisionUser(input: {
+    user: UserRecord;
+    wallet: WalletRecord;
+    transaction: TransactionRecord;
+  }) {
+    const userRef = this.col(COLLECTIONS.users).doc(input.user.id);
+    const walletRef = this.col(COLLECTIONS.wallets).doc(input.user.id);
+    const txRef = this.col(COLLECTIONS.transactions).doc(input.transaction.id);
+    return this.db.runTransaction(async (t) => {
+      if ((await t.get(userRef)).exists) return false;
+      t.create(userRef, input.user);
+      t.create(walletRef, input.wallet);
+      t.create(txRef, input.transaction);
+      return true;
+    });
   }
   async updateUser(id: string, patch: Partial<UserRecord>) {
     await this.col(COLLECTIONS.users).doc(id).set(patch, { merge: true });

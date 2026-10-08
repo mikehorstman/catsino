@@ -8,24 +8,31 @@ import { DailyBonusCard } from "@/components/casino/daily-bonus-card";
 import { JackpotTicker } from "@/components/casino/jackpot-ticker";
 import { LiveWinsFeed } from "@/components/casino/live-wins-feed";
 import { GAMES } from "@/games/catalog";
-import { getOrCreateUser } from "@/server/auth/guards";
+import { getCurrentUser } from "@/server/auth/guards";
 import { getStore } from "@/server/store";
-import { BonusService } from "@/server/services/bonus";
+import { BonusService, WELCOME_BONUS } from "@/server/services/bonus";
+import { WelcomeBanner } from "@/components/casino/welcome-banner";
 import { WalletService } from "@/server/store/wallet";
 
-export default async function HomePage() {
-  const user = await getOrCreateUser();
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ welcome?: string }>;
+}) {
+  const { welcome } = await searchParams;
+  const user = await getCurrentUser();
   const store = getStore();
   const liveGames = GAMES.filter((g) => g.status === "live");
   const slots = liveGames.filter((g) => g.kind === "slots");
-  const daily = new BonusService(store, new WalletService(store)).dailyStatus(
-    user,
-  );
+  const daily = user
+    ? new BonusService(store, new WalletService(store)).dailyStatus(user)
+    : null;
   const jackpotPool = (await store.getJackpot()).pool;
   const recentWins = await store.listAllRounds({ limit: 40 });
 
   return (
     <PageShell>
+      {user && welcome === "1" && <WelcomeBanner amount={WELCOME_BONUS} />}
       <section className="relative overflow-hidden rounded-3xl border border-gold-500/20 bg-gradient-to-br from-ink-800/80 via-ink-900/60 to-neon-purple/10 p-8 sm:p-12">
         {/* Real photo backdrop, blended into the panel. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -53,12 +60,25 @@ export default async function HomePage() {
             big win — all risk-free.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
-            <Button asChild size="lg">
-              <Link href="/games">Play now</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link href="/games/roulette">Try roulette</Link>
-            </Button>
+            {user ? (
+              <>
+                <Button asChild size="lg">
+                  <Link href="/games">Play now</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline">
+                  <Link href="/games/roulette">Try roulette</Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button asChild size="lg">
+                  <Link href="/register">Claim 10,000 free coins</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline">
+                  <Link href="/login">Sign in</Link>
+                </Button>
+              </>
+            )}
           </div>
           <div className="mt-8 flex flex-wrap gap-6 text-sm text-text-muted">
             <span className="flex items-center gap-2">
@@ -80,11 +100,13 @@ export default async function HomePage() {
       {/* Live wins + daily bonus */}
       <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
         <LiveWinsFeed rounds={recentWins} />
-        <DailyBonusCard
-          available={daily.available}
-          streak={daily.streak}
-          nextReward={daily.nextReward}
-        />
+        {daily && (
+          <DailyBonusCard
+            available={daily.available}
+            streak={daily.streak}
+            nextReward={daily.nextReward}
+          />
+        )}
       </div>
 
       <section className="mt-12">

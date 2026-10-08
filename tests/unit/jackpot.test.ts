@@ -40,7 +40,7 @@ describe("JackpotService", () => {
 
   it("pays the whole pool and resets it on a win", async () => {
     const store = createMemoryStore();
-    const user = await new AuthService(store).createGuest();
+    const user = await (await new AuthService(store).provision({ uid: crypto.randomUUID(), email: "t@catsino.test" })).user;
     const service = new JackpotService(store, fixedRng(0)); // always hits
 
     const win = await service.roll(user.id, user.displayName, 100);
@@ -58,7 +58,7 @@ describe("JackpotService", () => {
 
   it("does not pay when the roll misses", async () => {
     const store = createMemoryStore();
-    const user = await new AuthService(store).createGuest();
+    const user = await (await new AuthService(store).provision({ uid: crypto.randomUUID(), email: "t@catsino.test" })).user;
     const service = new JackpotService(store, fixedRng(0.999)); // never hits
     expect(await service.roll(user.id, user.displayName, 100)).toBeNull();
     expect(await new WalletService(store).getBalance(user.id)).toBe(10_000);
@@ -67,7 +67,7 @@ describe("JackpotService", () => {
   it("gives bigger bets better odds", async () => {
     // A float just above the base chance misses at bet 100 but hits at bet 1000.
     const store = createMemoryStore();
-    const user = await new AuthService(store).createGuest();
+    const user = await (await new AuthService(store).provision({ uid: crypto.randomUUID(), email: "t@catsino.test" })).user;
     const probe = (1 / 50_000) * 1.5; // between 1x and 5x bonus
     const service = new JackpotService(store, fixedRng(probe));
     expect(await service.roll(user.id, user.displayName, 100)).toBeNull();

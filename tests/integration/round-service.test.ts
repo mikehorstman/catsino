@@ -12,7 +12,6 @@ async function seedUser(store: Store, balance = 10_000): Promise<UserRecord> {
     id: "u1",
     email: "cat@example.com",
     displayName: "Cat",
-    passwordHash: "x",
     role: "player",
     createdAt: now,
     xp: 0,

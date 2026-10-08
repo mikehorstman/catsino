@@ -6,7 +6,7 @@ import { SlotMachineClient } from "./slot-machine-client";
 import { getSlotConfig } from "@/games/slots/registry";
 import { getGameMeta } from "@/games/catalog";
 import { getSlotTheme } from "@/games/slots/themes";
-import { getOrCreateUser } from "@/server/auth/guards";
+import { requireUser } from "@/server/auth/guards";
 import { getStore } from "@/server/store";
 import { WalletService } from "@/server/store/wallet";
 import { RoundService } from "@/server/services/round";
@@ -41,7 +41,7 @@ export default async function SlotPage({
   const config = getSlotConfig(slug);
   if (!config) notFound();
 
-  const user = await getOrCreateUser();
+  const user = await requireUser();
   const store = getStore();
   const balance = await new WalletService(store).getBalance(user.id);
   const theme = getSlotTheme(slug);

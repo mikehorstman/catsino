@@ -3,7 +3,7 @@ import { Cinzel, Outfit } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { getOrCreateUser } from "@/server/auth/guards";
+import { getCurrentUser } from "@/server/auth/guards";
 import { getStore } from "@/server/store";
 import { WalletService } from "@/server/store/wallet";
 
@@ -43,21 +43,18 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Auto-provisions a guest so the app is playable without signing in.
-  const user = await getOrCreateUser();
+  const user = await getCurrentUser();
   const store = getStore();
-  const balance = await new WalletService(store).getBalance(user.id);
+  const balance = user ? await new WalletService(store).getBalance(user.id) : 0;
   const jackpotPool = (await store.getJackpot()).pool;
 
   return (
     <html lang="en" className={`${display.variable} ${sans.variable} h-full`}>
       <body className="flex min-h-full flex-col antialiased">
         <SiteHeader
-          user={{
-            displayName: user.displayName,
-            level: user.level,
-            isGuest: Boolean(user.isGuest),
-          }}
+          user={
+            user ? { displayName: user.displayName, level: user.level } : null
+          }
           balance={balance}
           jackpotPool={jackpotPool}
         />

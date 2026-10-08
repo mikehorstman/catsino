@@ -1,83 +1,43 @@
-import { hashPassword, verifyPassword } from "@/server/auth/password";
-import { newId } from "@/server/store";
-import { withLock } from "@/server/store/mutex";
 import type { Store, UserRecord } from "@/server/store/types";
-import { WalletService } from "@/server/store/wallet";
 import { WELCOME_BONUS } from "./bonus";
 
-export class AuthError extends Error {
-  code: string;
-  constructor(code: string, message: string) {
-    super(message);
-    this.code = code;
-  }
+export interface ProvisionProfile {
+  /** Firebase Auth uid; used as the user, wallet and ledger key. */
+  uid: string;
+  email: string;
+  displayName?: string | null;
+  provider?: string;
 }
 
+/** Deterministic ledger id: a second signup attempt can never mint a second bonus. */
+export const welcomeTransactionId = (uid: string) => `welcome_${uid}`;
+
 export class AuthService {
-  private wallet: WalletService;
-  constructor(private store: Store) {
-    this.wallet = new WalletService(store);
-  }
-
-  async register(input: {
-    email: string;
-    displayName: string;
-    password: string;
-  }): Promise<UserRecord> {
-    const email = input.email.trim().toLowerCase();
-    if (await this.store.getUserByEmail(email)) {
-      throw new AuthError("EMAIL_TAKEN", "That email is already registered");
-    }
-
-    const user: UserRecord = {
-      id: newId(),
-      email,
-      displayName: input.displayName.trim() || "Anonymous Cat",
-      passwordHash: await hashPassword(input.password),
-      role: "player",
-      createdAt: new Date().toISOString(),
-      xp: 0,
-      level: 1,
-      totalRounds: 0,
-      totalWins: 0,
-      totalSpins: 0,
-      biggestWin: 0,
-      totalWagered: 0,
-      totalWon: 0,
-      dailyStreak: 0,
-      lastDailyClaim: null,
-      lastRefill: null,
-      achievements: [],
-    };
-    await this.store.createUser(user);
-    await this.store.putWallet({ userId: user.id, balance: 0, version: 0 });
-
-    // Welcome bonus credited through the ledger.
-    await this.wallet.apply({
-      userId: user.id,
-      type: "welcome",
-      amount: WELCOME_BONUS,
-      refType: "signup",
-    });
-
-    return user;
-  }
+  constructor(private store: Store) {}
 
   /**
-   * Create a guest account. No email or password — the app is playable
-   * immediately, and the guest can register later to keep their progress.
-   * Pass `id` to reuse the stable id from the guest cookie.
+   * Ensure a Firestore profile + wallet exist for an authenticated Firebase
+   * user, crediting the one-time welcome bonus on first creation.
+   * Idempotent: safe to call on every login and under concurrent requests.
    */
-  async createGuest(id?: string): Promise<UserRecord> {
-    const userId = id ?? newId();
+  async provision(
+    profile: ProvisionProfile,
+  ): Promise<{ user: UserRecord; created: boolean }> {
+    const existing = await this.store.getUserById(profile.uid);
+    if (existing) return { user: existing, created: false };
+
+    const now = new Date().toISOString();
+    const email = profile.email.trim().toLowerCase();
     const user: UserRecord = {
-      id: userId,
-      email: `guest-${userId.slice(0, 8)}@catsino.local`,
-      displayName: randomGuestName(),
-      passwordHash: "",
+      id: profile.uid,
+      email,
+      displayName:
+        profile.displayName?.trim().slice(0, 40) ||
+        email.split("@")[0] ||
+        "Anonymous Cat",
       role: "player",
-      isGuest: true,
-      createdAt: new Date().toISOString(),
+      provider: profile.provider,
+      createdAt: now,
       xp: 0,
       level: 1,
       totalRounds: 0,
@@ -91,55 +51,24 @@ export class AuthService {
       lastRefill: null,
       achievements: [],
     };
-    // Serialise provisioning per id: concurrent requests (e.g. layout + page
-    // rendering in parallel) must not both create the guest and double-credit
-    // the welcome bonus.
-    return withLock(`guest:${userId}`, async () => {
-      const existing = await this.store.getUserById(userId);
-      if (existing) return existing;
 
-      await this.store.createUser(user);
-      await this.store.putWallet({ userId: user.id, balance: 0, version: 0 });
-      await this.wallet.apply({
+    const created = await this.store.provisionUser({
+      user,
+      wallet: { userId: user.id, balance: WELCOME_BONUS, version: 1 },
+      transaction: {
+        id: welcomeTransactionId(user.id),
         userId: user.id,
         type: "welcome",
         amount: WELCOME_BONUS,
-        refType: "guest",
-      });
-      return user;
+        balanceAfter: WELCOME_BONUS,
+        refType: "signup",
+        createdAt: now,
+      },
     });
+    if (created) return { user, created: true };
+
+    // Lost a race with a concurrent provision: return the winner's record.
+    const winner = await this.store.getUserById(profile.uid);
+    return { user: winner ?? user, created: false };
   }
-
-  async login(email: string, password: string): Promise<UserRecord> {
-    const user = await this.store.getUserByEmail(email);
-    if (!user)
-      throw new AuthError("INVALID_CREDENTIALS", "Invalid email or password");
-    const ok = await verifyPassword(user.passwordHash, password);
-    if (!ok)
-      throw new AuthError("INVALID_CREDENTIALS", "Invalid email or password");
-    return user;
-  }
-}
-
-const GUEST_NAMES = [
-  "Whiskers",
-  "Mittens",
-  "Shadow",
-  "Luna",
-  "Tiger",
-  "Smokey",
-  "Ginger",
-  "Oreo",
-  "Pepper",
-  "Mochi",
-  "Nala",
-  "Simba",
-  "Cleo",
-  "Felix",
-  "Suki",
-];
-
-function randomGuestName(): string {
-  const name = GUEST_NAMES[Math.floor(Math.random() * GUEST_NAMES.length)];
-  return `${name} ${Math.floor(100 + Math.random() * 900)}`;
 }

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { DailyBonusCard } from "@/components/casino/daily-bonus-card";
 import { RefillCard } from "@/components/casino/refill-card";
 import { JackpotTicker } from "@/components/casino/jackpot-ticker";
-import { getOrCreateUser } from "@/server/auth/guards";
+import { requireUser } from "@/server/auth/guards";
 import { getStore } from "@/server/store";
 import { WalletService } from "@/server/store/wallet";
 import { BonusService } from "@/server/services/bonus";
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BonusesPage() {
-  const user = await getOrCreateUser();
+  const user = await requireUser();
   const store = getStore();
 
   const wallet = new WalletService(store);
