@@ -49,9 +49,7 @@ export default async function HomePage() {
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Button asChild size="lg">
-              <Link href={user ? "/games" : "/register"}>
-                {user ? "Play now" : "Claim 10,000 free coins"}
-              </Link>
+              <Link href="/games">Play now</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
               <Link href="/games/roulette">Try roulette</Link>

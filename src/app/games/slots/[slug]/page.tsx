@@ -6,7 +6,7 @@ import { SlotMachineClient } from "./slot-machine-client";
 import { getSlotConfig } from "@/games/slots/registry";
 import { getGameMeta } from "@/games/catalog";
 import { getSlotTheme } from "@/games/slots/themes";
-import { getCurrentUser } from "@/server/auth/guards";
+import { getOrCreateUser } from "@/server/auth/guards";
 import { getStore } from "@/server/store/memory";
 import { WalletService } from "@/server/store/wallet";
 import { RoundService } from "@/server/services/round";
@@ -37,11 +37,11 @@ export default async function SlotPage({ params }: { params: Promise<{ slug: str
   const config = getSlotConfig(slug);
   if (!config) notFound();
 
-  const user = await getCurrentUser();
-  const balance = user ? new WalletService(getStore()).getBalance(user.id) : 0;
+  const user = await getOrCreateUser();
+  const balance = new WalletService(getStore()).getBalance(user.id);
   const theme = getSlotTheme(slug);
   const meta = getGameMeta(slug);
-  const initialState = user ? new RoundService(getStore()).getSlotState(user, config) : {};
+  const initialState = new RoundService(getStore()).getSlotState(user, config);
 
   return (
     <PageShell>
@@ -51,7 +51,7 @@ export default async function SlotPage({ params }: { params: Promise<{ slug: str
             config={config}
             theme={theme}
             initialBalance={balance}
-            authed={Boolean(user)}
+            authed={true}
             initialState={initialState}
           />
         </div>

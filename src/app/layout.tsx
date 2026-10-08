@@ -3,7 +3,7 @@ import { Cinzel, Outfit } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { getCurrentUser } from "@/server/auth/guards";
+import { getOrCreateUser } from "@/server/auth/guards";
 import { getStore } from "@/server/store/memory";
 import { WalletService } from "@/server/store/wallet";
 
@@ -37,14 +37,15 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const user = await getCurrentUser();
-  const balance = user ? new WalletService(getStore()).getBalance(user.id) : 0;
+  // Auto-provisions a guest so the app is playable without signing in.
+  const user = await getOrCreateUser();
+  const balance = new WalletService(getStore()).getBalance(user.id);
 
   return (
     <html lang="en" className={`${display.variable} ${sans.variable} h-full`}>
       <body className="flex min-h-full flex-col antialiased">
         <SiteHeader
-          user={user ? { displayName: user.displayName, level: user.level } : null}
+          user={{ displayName: user.displayName, level: user.level, isGuest: Boolean(user.isGuest) }}
           balance={balance}
         />
         <main className="flex-1">{children}</main>

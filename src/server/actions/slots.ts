@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getSlotConfig } from "@/games/slots/registry";
-import { requireUser } from "@/server/auth/guards";
+import { getOrCreateUser } from "@/server/auth/guards";
 import { getStore } from "@/server/store/memory";
 import { RoundError, RoundService } from "@/server/services/round";
 import type { ActionResult } from "./auth";
@@ -18,12 +18,7 @@ export async function spinSlotAction(input: unknown): Promise<ActionResult<unkno
   const parsed = spinSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: { code: "VALIDATION", message: "Invalid spin request" } };
 
-  let user;
-  try {
-    user = await requireUser();
-  } catch {
-    return { ok: false, error: { code: "UNAUTHENTICATED", message: "Please sign in" } };
-  }
+  const user = await getOrCreateUser();
 
   const config = getSlotConfig(parsed.data.gameId);
   if (!config) return { ok: false, error: { code: "NOT_FOUND", message: "Game not found" } };
@@ -48,12 +43,7 @@ export async function playFreeSpinAction(input: unknown): Promise<ActionResult<u
   const parsed = z.object({ gameId: z.string().min(1).max(50) }).safeParse(input);
   if (!parsed.success) return { ok: false, error: { code: "VALIDATION", message: "Invalid request" } };
 
-  let user;
-  try {
-    user = await requireUser();
-  } catch {
-    return { ok: false, error: { code: "UNAUTHENTICATED", message: "Please sign in" } };
-  }
+  const user = await getOrCreateUser();
 
   const config = getSlotConfig(parsed.data.gameId);
   if (!config) return { ok: false, error: { code: "NOT_FOUND", message: "Game not found" } };
@@ -79,12 +69,7 @@ export async function pickBonusAction(input: unknown): Promise<ActionResult<unkn
   const parsed = pickSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: { code: "VALIDATION", message: "Invalid pick" } };
 
-  let user;
-  try {
-    user = await requireUser();
-  } catch {
-    return { ok: false, error: { code: "UNAUTHENTICATED", message: "Please sign in" } };
-  }
+  const user = await getOrCreateUser();
 
   const config = getSlotConfig(parsed.data.gameId);
   if (!config) return { ok: false, error: { code: "NOT_FOUND", message: "Game not found" } };

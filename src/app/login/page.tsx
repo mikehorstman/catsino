@@ -8,7 +8,9 @@ import { getCurrentUser } from "@/server/auth/guards";
 export const metadata: Metadata = { title: "Sign in" };
 
 export default async function LoginPage() {
-  if (await getCurrentUser()) redirect("/");
+  const user = await getCurrentUser();
+  // Guests can still visit to create a real account.
+  if (user && !user.isGuest) redirect("/");
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center px-4 py-16">

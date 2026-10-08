@@ -23,7 +23,7 @@ export function SiteHeader({
   user,
   balance,
 }: {
-  user: { displayName: string; level: number } | null;
+  user: { displayName: string; level: number; isGuest?: boolean } | null;
   balance: number;
 }) {
   const pathname = usePathname();
@@ -86,10 +86,21 @@ export function SiteHeader({
                 >
                   <UserIcon className="h-4 w-4" />
                   <span className="font-medium">{user.displayName}</span>
+                  {user.isGuest && (
+                    <span className="rounded-full border border-gold-500/40 bg-gold-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gold-200">
+                      Guest
+                    </span>
+                  )}
                 </Link>
-                <Button variant="ghost" size="icon" onClick={logout} aria-label="Log out" disabled={pending}>
-                  <LogOut className="h-4 w-4" />
-                </Button>
+                {user.isGuest ? (
+                  <Button asChild size="sm">
+                    <Link href="/register">Save progress</Link>
+                  </Button>
+                ) : (
+                  <Button variant="ghost" size="icon" onClick={logout} aria-label="Log out" disabled={pending}>
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </>
           ) : (
@@ -134,9 +145,17 @@ export function SiteHeader({
                     Profile
                   </Link>
                 </Button>
-                <Button variant="ghost" size="sm" onClick={logout} disabled={pending}>
-                  <LogOut className="h-4 w-4" /> Log out
-                </Button>
+                {user.isGuest ? (
+                  <Button asChild size="sm" className="flex-1">
+                    <Link href="/register" onClick={() => setMenuOpen(false)}>
+                      Save progress
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button variant="ghost" size="sm" onClick={logout} disabled={pending}>
+                    <LogOut className="h-4 w-4" /> Log out
+                  </Button>
+                )}
               </>
             ) : (
               <>

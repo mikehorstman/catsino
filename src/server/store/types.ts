@@ -22,6 +22,8 @@ export interface UserRecord {
   displayName: string;
   passwordHash: string;
   role: "player" | "admin";
+  /** Guests are auto-provisioned so the app is playable without signing in. */
+  isGuest?: boolean;
   createdAt: string;
   // Progression
   xp: number;

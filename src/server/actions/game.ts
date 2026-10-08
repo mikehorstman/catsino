@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireUser } from "@/server/auth/guards";
+import { getOrCreateUser } from "@/server/auth/guards";
 import { getStore } from "@/server/store/memory";
 import { RoundError, RoundService } from "@/server/services/round";
 import { BonusClaimError, BonusService } from "@/server/services/bonus";
@@ -26,12 +26,7 @@ export async function spinRouletteAction(input: unknown): Promise<ActionResult<u
   const parsed = rouletteSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: { code: "VALIDATION", message: "Invalid bets" } };
 
-  let user;
-  try {
-    user = await requireUser();
-  } catch {
-    return { ok: false, error: { code: "UNAUTHENTICATED", message: "Please sign in" } };
-  }
+  const user = await getOrCreateUser();
 
   try {
     const service = new RoundService(getStore());
@@ -49,12 +44,7 @@ export async function spinRouletteAction(input: unknown): Promise<ActionResult<u
 }
 
 export async function claimDailyBonusAction(): Promise<ActionResult<{ amount: number; streak: number }>> {
-  let user;
-  try {
-    user = await requireUser();
-  } catch {
-    return { ok: false, error: { code: "UNAUTHENTICATED", message: "Please sign in" } };
-  }
+  const user = await getOrCreateUser();
 
   try {
     const store = getStore();
@@ -70,12 +60,7 @@ export async function claimDailyBonusAction(): Promise<ActionResult<{ amount: nu
 }
 
 export async function claimRefillAction(): Promise<ActionResult<{ amount: number }>> {
-  let user;
-  try {
-    user = await requireUser();
-  } catch {
-    return { ok: false, error: { code: "UNAUTHENTICATED", message: "Please sign in" } };
-  }
+  const user = await getOrCreateUser();
 
   try {
     const store = getStore();

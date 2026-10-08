@@ -58,6 +58,45 @@ export class AuthService {
     return user;
   }
 
+  /**
+   * Create a guest account. No email or password — the app is playable
+   * immediately, and the guest can register later to keep their progress.
+   * Pass `id` to reuse the stable id from the guest cookie.
+   */
+  createGuest(id?: string): UserRecord {
+    const userId = id ?? newId();
+    const user: UserRecord = {
+      id: userId,
+      email: `guest-${userId.slice(0, 8)}@catsino.local`,
+      displayName: randomGuestName(),
+      passwordHash: "",
+      role: "player",
+      isGuest: true,
+      createdAt: new Date().toISOString(),
+      xp: 0,
+      level: 1,
+      totalRounds: 0,
+      totalWins: 0,
+      totalSpins: 0,
+      biggestWin: 0,
+      totalWagered: 0,
+      totalWon: 0,
+      dailyStreak: 0,
+      lastDailyClaim: null,
+      lastRefill: null,
+      achievements: [],
+    };
+    this.store.createUser(user);
+    this.store.putWallet({ userId: user.id, balance: 0, version: 0 });
+    this.wallet.apply({
+      userId: user.id,
+      type: "welcome",
+      amount: WELCOME_BONUS,
+      refType: "guest",
+    });
+    return user;
+  }
+
   async login(email: string, password: string): Promise<UserRecord> {
     const user = this.store.getUserByEmail(email);
     if (!user) throw new AuthError("INVALID_CREDENTIALS", "Invalid email or password");
@@ -65,4 +104,14 @@ export class AuthService {
     if (!ok) throw new AuthError("INVALID_CREDENTIALS", "Invalid email or password");
     return user;
   }
+}
+
+const GUEST_NAMES = [
+  "Whiskers", "Mittens", "Shadow", "Luna", "Tiger", "Smokey", "Ginger",
+  "Oreo", "Pepper", "Mochi", "Nala", "Simba", "Cleo", "Felix", "Suki",
+];
+
+function randomGuestName(): string {
+  const name = GUEST_NAMES[Math.floor(Math.random() * GUEST_NAMES.length)];
+  return `${name} ${Math.floor(100 + Math.random() * 900)}`;
 }

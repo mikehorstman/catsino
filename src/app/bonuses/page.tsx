@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DailyBonusCard } from "@/components/casino/daily-bonus-card";
 import { RefillCard } from "@/components/casino/refill-card";
-import { getCurrentUser } from "@/server/auth/guards";
+import { getOrCreateUser } from "@/server/auth/guards";
 import { getStore } from "@/server/store/memory";
 import { WalletService } from "@/server/store/wallet";
 import { BonusService } from "@/server/services/bonus";
@@ -20,25 +20,8 @@ export const metadata: Metadata = {
 };
 
 export default async function BonusesPage() {
-  const user = await getCurrentUser();
+  const user = await getOrCreateUser();
   const store = getStore();
-
-  if (!user) {
-    return (
-      <PageShell>
-        <SectionHeading title="Bonuses" subtitle="Sign in to claim your rewards." />
-        <div className="glass rounded-2xl p-8 text-center">
-          <p className="mb-4 text-text-secondary">
-            Create a free account to unlock a 10,000 coin welcome bonus, daily
-            rewards, level-up bonuses and achievements.
-          </p>
-          <Button asChild size="lg">
-            <Link href="/register">Claim 10,000 free coins</Link>
-          </Button>
-        </div>
-      </PageShell>
-    );
-  }
 
   const wallet = new WalletService(store);
   const bonus = new BonusService(store, wallet);
