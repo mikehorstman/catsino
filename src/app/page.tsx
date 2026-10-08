@@ -5,23 +5,22 @@ import { SectionHeading } from "@/components/casino/section-heading";
 import { GameCard } from "@/components/casino/game-card";
 import { Button } from "@/components/ui/button";
 import { DailyBonusCard } from "@/components/casino/daily-bonus-card";
+import { JackpotTicker } from "@/components/casino/jackpot-ticker";
+import { LiveWinsFeed } from "@/components/casino/live-wins-feed";
 import { GAMES } from "@/games/catalog";
-import { getCurrentUser } from "@/server/auth/guards";
+import { getOrCreateUser } from "@/server/auth/guards";
 import { getStore } from "@/server/store/memory";
 import { BonusService } from "@/server/services/bonus";
 import { WalletService } from "@/server/store/wallet";
 
 export default async function HomePage() {
-  const user = await getCurrentUser();
+  const user = await getOrCreateUser();
+  const store = getStore();
   const liveGames = GAMES.filter((g) => g.status === "live");
   const slots = liveGames.filter((g) => g.kind === "slots");
-
-  let daily: { available: boolean; streak: number; nextReward: number } | null = null;
-  if (user) {
-    const store = getStore();
-    const bonus = new BonusService(store, new WalletService(store));
-    daily = bonus.dailyStatus(user);
-  }
+  const daily = new BonusService(store, new WalletService(store)).dailyStatus(user);
+  const jackpotPool = store.getJackpot().pool;
+  const recentWins = store.listAllRounds({ limit: 40 });
 
   return (
     <PageShell>
@@ -66,15 +65,20 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {user && daily && (
-        <div className="mt-6">
-          <DailyBonusCard
-            available={daily.available}
-            streak={daily.streak}
-            nextReward={daily.nextReward}
-          />
-        </div>
-      )}
+      {/* Progressive jackpot */}
+      <div className="mt-6">
+        <JackpotTicker pool={jackpotPool} />
+      </div>
+
+      {/* Live wins + daily bonus */}
+      <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <LiveWinsFeed rounds={recentWins} />
+        <DailyBonusCard
+          available={daily.available}
+          streak={daily.streak}
+          nextReward={daily.nextReward}
+        />
+      </div>
 
       <section className="mt-12">
         <SectionHeading

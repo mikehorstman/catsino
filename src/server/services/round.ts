@@ -9,6 +9,7 @@ import { newId } from "@/server/store/memory";
 import { WalletError, WalletService } from "@/server/store/wallet";
 import { withLock } from "@/server/store/mutex";
 import { ProgressionService, type RoundOutcome } from "./progression";
+import { JackpotService, type JackpotWin } from "./jackpot";
 
 export class RoundError extends Error {
   code: string;
@@ -29,6 +30,8 @@ export interface SlotRoundResponse {
   balance: number;
   result: ReturnType<typeof spinSlot>;
   progression: RoundOutcome;
+  jackpot: JackpotWin | null;
+  jackpotPool: number;
   bonus: SlotBonus;
 }
 
@@ -196,6 +199,14 @@ export class RoundService {
         isSpin: true,
       });
 
+      // Progressive jackpot: every paid spin feeds the pool and can win it.
+      const jackpotService = new JackpotService(this.store, this.rng);
+      let jackpot: JackpotWin | null = null;
+      if (charge > 0) {
+        jackpotService.contribute(charge);
+        jackpot = jackpotService.roll(user.id, user.displayName, charge);
+      }
+
       const response: SlotRoundResponse = {
         kind: "slots",
         roundId,
@@ -203,6 +214,8 @@ export class RoundService {
         result,
         progression,
         bonus,
+        jackpot,
+        jackpotPool: jackpotService.getPool(),
       };
       this.remember(user.id, idempotencyKey, roundId, response);
       return response;
@@ -372,6 +385,8 @@ export class RoundService {
         result,
         progression,
         bonus: null,
+        jackpot: null,
+        jackpotPool: new JackpotService(this.store, this.rng).getPool(),
       };
     });
   }

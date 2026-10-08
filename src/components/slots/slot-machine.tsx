@@ -8,6 +8,8 @@ import { SlotReels } from "./pixi-reels";
 import { WinBanner } from "./win-banner";
 import { FreeSpinsStatus } from "./bonus-summary";
 import { PickBonusGame, type PickBonusView } from "./pick-bonus-game";
+import { JackpotTicker } from "@/components/casino/jackpot-ticker";
+import { WinCelebration } from "@/components/casino/win-celebration";
 import { spinSlotAction, playFreeSpinAction } from "@/server/actions/slots";
 import { useAudioStore } from "@/stores/audio";
 import { useBalanceStore } from "@/stores/balance";
@@ -30,6 +32,8 @@ interface SpinResponse {
     | { type: "pickBonus"; id: string; picks: number; cellCount: number; bet: number }
     | { type: "freeSpins"; remaining: number; multiplier: number; bet: number }
     | null;
+  jackpot: { amount: number; pool: number } | null;
+  jackpotPool: number;
 }
 
 function newKey() {
@@ -42,18 +46,22 @@ export function SlotMachine({
   initialBalance,
   authed,
   initialState,
+  initialJackpot,
 }: {
   config: SlotConfig;
   theme: SlotTheme;
   initialBalance: number;
   authed: boolean;
   initialState: SlotState;
+  initialJackpot: number;
 }) {
   const levels = config.betLevels;
   const [betIndex, setBetIndex] = useState(1);
   const [spinning, setSpinning] = useState(false);
   const [win, setWin] = useState<SpinResult | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [jackpotPool, setJackpotPool] = useState(initialJackpot);
+  const [celebration, setCelebration] = useState<{ win: number; bet: number } | null>(null);
   const [freeSpins, setFreeSpins] = useState<
     { remaining: number; multiplier: number; bet: number; accumulated: number } | null
   >(initialState.freeSpins ?? null);
@@ -112,6 +120,7 @@ export function SlotMachine({
   const handleResult = useCallback(
     (data: SpinResponse) => {
       setBalance(data.balance);
+      setJackpotPool(data.jackpotPool);
       if (data.bonus?.type === "freeSpins") {
         setFreeSpins((prev) => ({
           remaining: data.bonus!.type === "freeSpins" ? data.bonus!.remaining : 0,
@@ -132,6 +141,11 @@ export function SlotMachine({
           complete: false,
           result: null,
         });
+        play("bigWin");
+      }
+      // Jackpot win takes over the screen.
+      if (data.jackpot) {
+        setCelebration({ win: data.jackpot.amount, bet: 1 });
         play("bigWin");
       }
       announce(data);
@@ -169,6 +183,10 @@ export function SlotMachine({
     if (data.result.totalWin > 0) {
       play(data.result.totalWin >= bet * 20 ? "bigWin" : "win");
       play("coin");
+      // Big wins get the full-screen celebration.
+      if (data.result.totalWin >= bet * 20) {
+        setCelebration({ win: data.result.totalWin, bet });
+      }
     }
     handleResult(data);
   }, [authed, bet, config.id, freeSpins, handleResult, play, spinning]);
@@ -185,10 +203,20 @@ export function SlotMachine({
 
   return (
     <div className="space-y-4">
+      {celebration && (
+        <WinCelebration
+          totalWin={celebration.win}
+          bet={celebration.bet}
+          onDone={() => setCelebration(null)}
+        />
+      )}
+
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-black text-text-primary">{config.name}</h1>
         <Badge tone="gold">{config.paylines.length} lines</Badge>
       </div>
+
+      <JackpotTicker pool={jackpotPool} />
 
       {freeSpins && (
         <FreeSpinsStatus

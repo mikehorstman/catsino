@@ -42,6 +42,7 @@ export default async function SlotPage({ params }: { params: Promise<{ slug: str
   const theme = getSlotTheme(slug);
   const meta = getGameMeta(slug);
   const initialState = new RoundService(getStore()).getSlotState(user, config);
+  const jackpotPool = getStore().getJackpot().pool;
 
   return (
     <PageShell>
@@ -53,6 +54,7 @@ export default async function SlotPage({ params }: { params: Promise<{ slug: str
             initialBalance={balance}
             authed={true}
             initialState={initialState}
+            initialJackpot={jackpotPool}
           />
         </div>
         <aside className="space-y-5">

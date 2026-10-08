@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { Volume2, VolumeX, LogOut, User as UserIcon, Menu, X } from "lucide-react";
 import { Logo } from "@/components/casino/logo";
 import { BalancePill } from "@/components/casino/balance-pill";
+import { JackpotTicker } from "@/components/casino/jackpot-ticker";
 import { Button } from "@/components/ui/button";
 import { useAudioStore } from "@/stores/audio";
 import { logoutAction } from "@/server/actions/auth";
@@ -22,9 +23,11 @@ const NAV = [
 export function SiteHeader({
   user,
   balance,
+  jackpotPool,
 }: {
   user: { displayName: string; level: number; isGuest?: boolean } | null;
   balance: number;
+  jackpotPool: number;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -67,6 +70,9 @@ export function SiteHeader({
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          <div className="hidden lg:block">
+            <JackpotTicker pool={jackpotPool} compact />
+          </div>
           <button
             type="button"
             onClick={toggleMute}

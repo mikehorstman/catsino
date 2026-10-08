@@ -80,6 +80,19 @@ export interface IdempotencyRecord {
   createdAt: string;
 }
 
+/** The shared progressive jackpot pool. */
+export interface JackpotRecord {
+  id: string;
+  /** Current pool in coins. */
+  pool: number;
+  /** Pool value the next jackpot resets to. */
+  seed: number;
+  lastWonAt: string | null;
+  lastWonBy: string | null;
+  lastWonByName: string | null;
+  lastWonAmount: number | null;
+}
+
 /**
  * An in-progress or completed bonus game (e.g. pick-and-win). The board is
  * generated server-side at trigger time and stored so a client reload cannot
@@ -118,6 +131,9 @@ export interface Store {
   appendTransaction(tx: TransactionRecord): void;
   listTransactions(userId: string): TransactionRecord[];
 
+
+  getJackpot(): JackpotRecord;
+  putJackpot(jackpot: JackpotRecord): void;
   createRound(round: RoundRecord): void;
   listRounds(userId: string, opts?: { limit?: number; offset?: number; kind?: string; result?: "win" | "loss" }): RoundRecord[];
   countRounds(userId: string): number;

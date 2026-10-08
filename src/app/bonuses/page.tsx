@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DailyBonusCard } from "@/components/casino/daily-bonus-card";
 import { RefillCard } from "@/components/casino/refill-card";
+import { JackpotTicker } from "@/components/casino/jackpot-ticker";
 import { getOrCreateUser } from "@/server/auth/guards";
 import { getStore } from "@/server/store/memory";
 import { WalletService } from "@/server/store/wallet";
@@ -28,15 +29,46 @@ export default async function BonusesPage() {
   const daily = bonus.dailyStatus(user);
   const refill = bonus.refillStatus(user);
   const earned = user.achievements.length;
+  const jackpot = store.getJackpot();
 
   return (
     <PageShell>
       <SectionHeading title="Bonuses & Rewards" subtitle="Everything you can collect in Catsino." />
 
+      {/* Jackpot hero */}
+      <div className="mb-6">
+        <JackpotTicker pool={jackpot.pool} />
+        {jackpot.lastWonByName && (
+          <p className="mt-2 text-center text-xs text-text-muted">
+            Last won by <span className="font-semibold text-gold-200">{jackpot.lastWonByName}</span> for{" "}
+            <span className="font-semibold text-gold-200">{formatCoins(jackpot.lastWonAmount ?? 0)}</span> coins
+          </p>
+        )}
+      </div>
+
       <div className="grid gap-5 md:grid-cols-2">
         <DailyBonusCard available={daily.available} streak={daily.streak} nextReward={daily.nextReward} />
         <RefillCard available={refill.available} cooldownEndsAt={refill.cooldownEndsAt} />
       </div>
+
+      {/* Bonus showcase */}
+      <section className="mt-12">
+        <SectionHeading title="Ways to win" subtitle="Stack these for the biggest hauls." />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { icon: "🎰", title: "Free Spins", body: "3+ scatters award 10–12 free spins with a 2–3x multiplier." },
+            { icon: "🐭", title: "Cat Burglar Bonus", body: "Pick-and-win board with doubling paws and a thieving cat." },
+            { icon: "👑", title: "Mega Jackpot", body: "Every spin feeds the pool. Land it to take the whole thing." },
+            { icon: "🏆", title: "Level Rewards", body: "Climb from Stray Kitten to Catsino VIP for coin payouts." },
+          ].map((item) => (
+            <div key={item.title} className="glass rounded-2xl p-5">
+              <span className="text-3xl" aria-hidden>{item.icon}</span>
+              <h3 className="mt-2 font-display font-bold text-text-primary">{item.title}</h3>
+              <p className="mt-1 text-sm text-text-muted">{item.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section className="mt-12">
         <SectionHeading title="Levels" subtitle="Earn XP from every round to climb the ranks." />

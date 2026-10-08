@@ -27,6 +27,7 @@ export function SlotMachineClient(props: {
   initialBalance: number;
   authed: boolean;
   initialState: SlotState;
+  initialJackpot: number;
 }) {
   return <SlotMachine {...props} />;
 }

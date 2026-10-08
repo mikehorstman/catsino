@@ -4,6 +4,7 @@ import { dirname } from "node:path";
 import type {
   BonusGameRecord,
   IdempotencyRecord,
+  JackpotRecord,
   RoundRecord,
   Store,
   TransactionRecord,
@@ -18,10 +19,29 @@ interface Data {
   rounds: RoundRecord[];
   idempotency: IdempotencyRecord[];
   bonusGames: BonusGameRecord[];
+  jackpot: JackpotRecord;
 }
 
+const JACKPOT_SEED = 250_000;
+
 function emptyData(): Data {
-  return { users: [], wallets: [], transactions: [], rounds: [], idempotency: [], bonusGames: [] };
+  return {
+    users: [],
+    wallets: [],
+    transactions: [],
+    rounds: [],
+    idempotency: [],
+    bonusGames: [],
+    jackpot: {
+      id: "catsino-jackpot",
+      pool: JACKPOT_SEED,
+      seed: JACKPOT_SEED,
+      lastWonAt: null,
+      lastWonBy: null,
+      lastWonByName: null,
+      lastWonAmount: null,
+    },
+  };
 }
 
 /**
@@ -146,7 +166,14 @@ createBonusGame(game: BonusGameRecord) {
     this.scheduleSave();
   }
 
-  
+  getJackpot() {
+    return this.data.jackpot;
+  }
+  putJackpot(jackpot: JackpotRecord) {
+    this.data.jackpot = jackpot;
+    this.scheduleSave();
+  }
+
   /** Test helper: reset all state. */
   reset() {
     this.data = emptyData();

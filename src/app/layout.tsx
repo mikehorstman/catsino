@@ -40,6 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Auto-provisions a guest so the app is playable without signing in.
   const user = await getOrCreateUser();
   const balance = new WalletService(getStore()).getBalance(user.id);
+  const jackpotPool = getStore().getJackpot().pool;
 
   return (
     <html lang="en" className={`${display.variable} ${sans.variable} h-full`}>
@@ -47,6 +48,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <SiteHeader
           user={{ displayName: user.displayName, level: user.level, isGuest: Boolean(user.isGuest) }}
           balance={balance}
+          jackpotPool={jackpotPool}
         />
         <main className="flex-1">{children}</main>
         <SiteFooter />
