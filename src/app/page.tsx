@@ -1,69 +1,100 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Sparkles, ShieldCheck, Coins } from "lucide-react";
+import { PageShell } from "@/components/layout/page-shell";
+import { SectionHeading } from "@/components/casino/section-heading";
+import { GameCard } from "@/components/casino/game-card";
+import { Button } from "@/components/ui/button";
+import { DailyBonusCard } from "@/components/casino/daily-bonus-card";
+import { GAMES } from "@/games/catalog";
+import { getCurrentUser } from "@/server/auth/guards";
+import { getStore } from "@/server/store/memory";
+import { BonusService } from "@/server/services/bonus";
+import { WalletService } from "@/server/store/wallet";
 
-export default function Home() {
+export default async function HomePage() {
+  const user = await getCurrentUser();
+  const liveGames = GAMES.filter((g) => g.status === "live");
+  const slots = liveGames.filter((g) => g.kind === "slots");
+
+  let daily: { available: boolean; streak: number; nextReward: number } | null = null;
+  if (user) {
+    const store = getStore();
+    const bonus = new BonusService(store, new WalletService(store));
+    daily = bonus.dailyStatus(user);
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <PageShell>
+      <section className="relative overflow-hidden rounded-3xl border border-gold-500/20 bg-gradient-to-br from-ink-800/80 via-ink-900/60 to-neon-purple/10 p-8 sm:p-12">
+        <div className="absolute -right-10 top-1/2 hidden -translate-y-1/2 text-[12rem] opacity-10 md:block" aria-hidden>
+          🐈‍⬛
+        </div>
+        <div className="relative max-w-2xl">
+          <span className="inline-flex items-center gap-2 rounded-full border border-gold-500/30 bg-gold-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-gold-200">
+            <Sparkles className="h-3.5 w-3.5" /> Free to play · Virtual coins only
+          </span>
+          <h1 className="mt-5 font-display text-4xl font-black leading-tight sm:text-6xl">
+            <span className="gold-text">The Cat&apos;s</span>{" "}
+            <span className="text-text-primary">Casino</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-4 max-w-xl text-base text-text-secondary sm:text-lg">
+            Spin elegant cat-themed slots and take on European roulette. Earn Catsino
+            Coins, climb from Stray Kitten to Catsino VIP, and chase the big win —
+            all risk-free.
           </p>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Button asChild size="lg">
+              <Link href={user ? "/games" : "/register"}>
+                {user ? "Play now" : "Claim 10,000 free coins"}
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="/games/roulette">Try roulette</Link>
+            </Button>
+          </div>
+          <div className="mt-8 flex flex-wrap gap-6 text-sm text-text-muted">
+            <span className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-win" /> Server-authoritative outcomes
+            </span>
+            <span className="flex items-center gap-2">
+              <Coins className="h-4 w-4 text-gold-400" /> No real money, ever
+            </span>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {user && daily && (
+        <div className="mt-6">
+          <DailyBonusCard
+            available={daily.available}
+            streak={daily.streak}
+            nextReward={daily.nextReward}
+          />
         </div>
-      </main>
-    </div>
+      )}
+
+      <section className="mt-12">
+        <SectionHeading
+          title="Featured Slots"
+          subtitle="Beautifully themed cat slots with wilds, scatters and free spins."
+          href="/games/slots"
+          action="All slots"
+        />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          {slots.map((game) => (
+            <GameCard key={game.id} game={game} />
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-12">
+        <SectionHeading title="Popular Games" subtitle="Everything on the Catsino floor." href="/games" action="Browse all" />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          {GAMES.map((game) => (
+            <GameCard key={game.id} game={game} />
+          ))}
+        </div>
+      </section>
+    </PageShell>
   );
 }

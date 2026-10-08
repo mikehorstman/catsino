@@ -1,0 +1,101 @@
+/**
+ * Persistence layer types.
+ *
+ * The app talks to a `Store` interface. Today the only implementation is an
+ * in-memory store with optional JSON-file persistence. Swapping in Postgres
+ * later means writing one more implementation — services never change.
+ */
+
+export type TransactionType =
+  | "welcome"
+  | "bet"
+  | "win"
+  | "daily-bonus"
+  | "level-reward"
+  | "achievement"
+  | "refill"
+  | "refund";
+
+export interface UserRecord {
+  id: string;
+  email: string;
+  displayName: string;
+  passwordHash: string;
+  role: "player" | "admin";
+  createdAt: string;
+  // Progression
+  xp: number;
+  level: number;
+  // Aggregated stats (denormalised for fast reads)
+  totalRounds: number;
+  totalWins: number;
+  totalSpins: number;
+  biggestWin: number;
+  totalWagered: number;
+  totalWon: number;
+  // Bonus bookkeeping
+  dailyStreak: number;
+  lastDailyClaim: string | null;
+  lastRefill: string | null;
+  achievements: string[];
+}
+
+export interface WalletRecord {
+  userId: string;
+  balance: number;
+  version: number;
+}
+
+export interface TransactionRecord {
+  id: string;
+  userId: string;
+  type: TransactionType;
+  amount: number; // signed
+  balanceAfter: number;
+  refType?: string;
+  refId?: string;
+  idempotencyKey?: string;
+  createdAt: string;
+}
+
+export interface RoundRecord {
+  id: string;
+  userId: string;
+  gameId: string;
+  kind: "slots" | "roulette";
+  betTotal: number;
+  winTotal: number;
+  outcome: unknown;
+  configVersion: number;
+  createdAt: string;
+}
+
+export interface IdempotencyRecord {
+  key: string;
+  userId: string;
+  roundId: string;
+  response: unknown;
+  createdAt: string;
+}
+
+export interface Store {
+  getUserById(id: string): UserRecord | undefined;
+  getUserByEmail(email: string): UserRecord | undefined;
+  createUser(user: UserRecord): void;
+  updateUser(id: string, patch: Partial<UserRecord>): void;
+
+  getWallet(userId: string): WalletRecord | undefined;
+  putWallet(wallet: WalletRecord): void;
+
+  appendTransaction(tx: TransactionRecord): void;
+  listTransactions(userId: string): TransactionRecord[];
+
+  createRound(round: RoundRecord): void;
+  listRounds(userId: string, opts?: { limit?: number; offset?: number; kind?: string; result?: "win" | "loss" }): RoundRecord[];
+  countRounds(userId: string): number;
+  listAllRounds(opts?: { limit?: number }): RoundRecord[];
+  listAllUsers(): UserRecord[];
+
+  getIdempotency(key: string, userId: string): IdempotencyRecord | undefined;
+  putIdempotency(record: IdempotencyRecord): void;
+}
